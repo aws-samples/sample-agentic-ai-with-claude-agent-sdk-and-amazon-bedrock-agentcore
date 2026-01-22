@@ -1,0 +1,480 @@
+table_name: instructor_performance_summary
+version: "1.0"
+record_count: 200
+
+metadata:
+  purpose: "Instructor effectiveness, teaching load, and student outcomes"
+  updated_at: "2026-01-14"
+
+columns:
+  # Instructor Context
+  - name: instructor_id
+    type: INTEGER
+    description: "Unique identifier for each instructor"
+    nullable: false
+    primary_key: true
+    statistics:
+      min: 1
+      max: 200
+      distinct_count: 200
+
+  - name: instructor_first_name
+    type: VARCHAR(100)
+    description: "Instructor's first name"
+    nullable: false
+
+  - name: instructor_last_name
+    type: VARCHAR(100)
+    description: "Instructor's last name"
+    nullable: false
+
+  - name: instructor_email
+    type: VARCHAR(200)
+    description: "Instructor's email address"
+    nullable: false
+
+  - name: instructor_rank
+    type: VARCHAR(50)
+    description: "Academic rank of the instructor"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - value: "Professor"
+        description: "Full professor"
+      - value: "Associate Professor"
+        description: "Associate professor"
+      - value: "Assistant Professor"
+        description: "Assistant professor"
+      - value: "Lecturer"
+        description: "Lecturer"
+      - value: "Adjunct"
+        description: "Adjunct faculty"
+
+  - name: instructor_hire_date
+    type: DATE
+    description: "Date when instructor was hired"
+    nullable: false
+    value_type: continuous
+    statistics:
+      range: "Last 20 years from data generation date"
+
+  - name: instructor_office
+    type: VARCHAR(20)
+    description: "Instructor's office location"
+    nullable: false
+
+  - name: instructor_salary
+    type: DECIMAL(10,2)
+    description: "Instructor's annual salary"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 60000.00
+      max: 180000.00
+
+  - name: years_of_service
+    type: INTEGER
+    description: "Number of years instructor has been employed"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 0
+      max: 20
+    query_notes: "Calculated from hire_date to current date"
+
+  # Department Context
+  - name: department_id
+    type: INTEGER
+    description: "Department ID where instructor is assigned"
+    nullable: false
+    statistics:
+      min: 1
+      max: 20
+
+  - name: department_name
+    type: VARCHAR(100)
+    description: "Department name"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - "Computer Science"
+      - "Mathematics"
+      - "Physics"
+      - "Chemistry"
+      - "Biology"
+      - "English"
+      - "History"
+      - "Psychology"
+      - "Economics"
+      - "Business Administration"
+      - "Engineering"
+      - "Nursing"
+      - "Education"
+      - "Art"
+      - "Music"
+      - "Philosophy"
+      - "Sociology"
+      - "Political Science"
+      - "Communications"
+      - "Statistics"
+
+  - name: dean_name
+    type: VARCHAR(100)
+    description: "Name of the department dean"
+    nullable: false
+
+  - name: building_name
+    type: VARCHAR(100)
+    description: "Building where department is located"
+    nullable: false
+
+  # Current Semester Teaching Load
+  - name: courses_teaching_count
+    type: INTEGER
+    description: "Number of courses instructor is currently teaching"
+    nullable: false
+    value_type: continuous
+    query_notes: "Pre-aggregated metric for current semester"
+
+  - name: total_students_current
+    type: INTEGER
+    description: "Total number of students instructor is currently teaching"
+    nullable: false
+    value_type: continuous
+    query_notes: "Sum of students across all current courses"
+
+  - name: total_credits_teaching
+    type: INTEGER
+    description: "Total credit hours instructor is currently teaching"
+    nullable: false
+    value_type: continuous
+    query_notes: "Pre-aggregated metric for current semester"
+
+  - name: sections_count
+    type: INTEGER
+    description: "Number of sections instructor is teaching"
+    nullable: false
+    value_type: continuous
+
+  # Historical Teaching Metrics (Pre-aggregated)
+  - name: total_courses_taught_all_time
+    type: INTEGER
+    description: "Total number of courses taught throughout career"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 20
+      max: 150
+    query_notes: "Pre-calculated lifetime metric"
+
+  - name: total_students_taught
+    type: INTEGER
+    description: "Total number of students taught throughout career"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 500
+      max: 5000
+    query_notes: "Pre-calculated lifetime metric"
+
+  - name: semesters_teaching_count
+    type: INTEGER
+    description: "Number of semesters instructor has taught"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 4
+      max: 30
+
+  # Grade Distribution Metrics (Pre-aggregated)
+  - name: avg_grade_given
+    type: DECIMAL(3,2)
+    description: "Average grade given by instructor"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 2.50
+      max: 3.50
+    query_notes: "Pre-calculated average across all courses"
+
+  - name: median_grade_given
+    type: DECIMAL(3,2)
+    description: "Median grade given by instructor"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 2.50
+      max: 3.50
+
+  - name: a_grade_pct
+    type: DECIMAL(5,2)
+    description: "Percentage of A grades given"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 15.00
+      max: 35.00
+
+  - name: b_grade_pct
+    type: DECIMAL(5,2)
+    description: "Percentage of B grades given"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 25.00
+      max: 40.00
+
+  - name: c_grade_pct
+    type: DECIMAL(5,2)
+    description: "Percentage of C grades given"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 15.00
+      max: 30.00
+
+  - name: d_grade_pct
+    type: DECIMAL(5,2)
+    description: "Percentage of D grades given"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 5.00
+      max: 15.00
+
+  - name: f_grade_pct
+    type: DECIMAL(5,2)
+    description: "Percentage of F grades given"
+    nullable: false
+    value_type: continuous
+    query_notes: "Calculated as remainder to make total 100%"
+
+  - name: pass_rate_pct
+    type: DECIMAL(5,2)
+    description: "Percentage of students who passed instructor's courses"
+    nullable: false
+    value_type: continuous
+    query_notes: "Calculated as 100 - f_grade_pct (pre-aggregated)"
+
+  - name: avg_gpa_given
+    type: DECIMAL(3,2)
+    description: "Average GPA given by instructor"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 2.50
+      max: 3.50
+
+  # Rating Metrics (Pre-aggregated)
+  - name: total_feedback_count
+    type: INTEGER
+    description: "Total number of student feedback responses received"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 50
+      max: 500
+
+  - name: avg_overall_rating
+    type: DECIMAL(3,2)
+    description: "Average overall rating from students"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 3.00
+      max: 5.00
+    query_notes: "Scale of 1-5, higher is better"
+
+  - name: avg_instructor_rating
+    type: DECIMAL(3,2)
+    description: "Average rating specifically for instructor effectiveness"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 3.00
+      max: 5.00
+
+  - name: avg_course_content_rating
+    type: DECIMAL(3,2)
+    description: "Average rating for course content quality"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 3.00
+      max: 5.00
+
+  - name: avg_difficulty_rating
+    type: DECIMAL(3,2)
+    description: "Average perceived difficulty rating"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 2.00
+      max: 4.50
+    query_notes: "Scale of 1-5, higher means more difficult"
+
+  - name: avg_workload_rating
+    type: DECIMAL(3,2)
+    description: "Average workload rating from students"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 2.50
+      max: 4.50
+    query_notes: "Scale of 1-5, higher means heavier workload"
+
+  - name: would_recommend_pct
+    type: DECIMAL(5,2)
+    description: "Percentage of students who would recommend instructor"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 60.00
+      max: 95.00
+
+  # Student Outcomes
+  - name: student_avg_gpa_in_courses
+    type: DECIMAL(3,2)
+    description: "Average GPA of students in instructor's courses"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 2.50
+      max: 3.50
+
+  - name: student_completion_rate
+    type: DECIMAL(5,2)
+    description: "Percentage of students who complete instructor's courses"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 85.00
+      max: 98.00
+    query_notes: "Pre-calculated completion rate"
+
+  - name: student_drop_rate_pct
+    type: DECIMAL(5,2)
+    description: "Percentage of students who drop instructor's courses"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 2.00
+      max: 15.00
+
+  # Comparative Metrics
+  - name: rating_vs_dept_avg
+    type: DECIMAL(4,2)
+    description: "Instructor's rating compared to department average"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: -0.50
+      max: 0.50
+    query_notes: "Positive means above average, negative means below"
+
+  - name: grade_generosity_vs_dept_avg
+    type: DECIMAL(4,2)
+    description: "Instructor's grade generosity compared to department"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: -0.30
+      max: 0.30
+    query_notes: "Positive means more generous, negative means tougher"
+
+  - name: workload_vs_dept_avg
+    type: DECIMAL(4,2)
+    description: "Instructor's workload compared to department average"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: -0.50
+      max: 0.50
+    query_notes: "Positive means heavier workload, negative means lighter"
+
+  # Rankings (Pre-calculated)
+  - name: dept_rating_rank
+    type: INTEGER
+    description: "Instructor's rating rank within department"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 1
+      max: 20
+    query_notes: "1 is best, lower is better"
+
+  - name: university_rating_rank
+    type: INTEGER
+    description: "Instructor's rating rank across entire university"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 1
+      max: 100
+    query_notes: "1 is best, lower is better"
+
+  # Flags
+  - name: is_highly_rated
+    type: BOOLEAN
+    description: "True if avg_overall_rating >= 4.5"
+    nullable: false
+    value_type: boolean
+    query_notes: "Identifies top-rated instructors"
+
+  - name: is_tough_grader
+    type: BOOLEAN
+    description: "True if f_grade_pct > 15"
+    nullable: false
+    value_type: boolean
+    query_notes: "Identifies instructors with high failure rates"
+
+  - name: is_easy_grader
+    type: BOOLEAN
+    description: "True if a_grade_pct > 30"
+    nullable: false
+    value_type: boolean
+    query_notes: "Identifies instructors with high A-grade rates"
+
+  - name: has_high_workload
+    type: BOOLEAN
+    description: "True if workload is significantly above average"
+    nullable: false
+    value_type: boolean
+
+  - name: is_tenured
+    type: BOOLEAN
+    description: "True if rank is Professor or Associate Professor"
+    nullable: false
+    value_type: boolean
+    query_notes: "Calculated from instructor_rank field"
+
+# Relationships
+relationships:
+  - target_table: "course_performance_analytics"
+    join_keys:
+      - instructor_id
+    relationship_type: "one-to-many"
+    description: "One instructor teaches many courses"
+
+  - target_table: "student_academic_performance"
+    join_keys:
+      - instructor_id
+    relationship_type: "one-to-many"
+    description: "Many student grades per instructor"
+
+# Indexes
+indexes:
+  - columns: [instructor_id]
+    type: "primary_key"
+  - columns: [department_id]
+    type: "index"
+    usage: "Frequently used for department-level analysis"
+  - columns: [is_highly_rated]
+    type: "index"
+    usage: "Common filter for identifying top instructors"
+  - columns: [avg_overall_rating]
+    type: "index"
+    usage: "Frequently used for ranking and sorting"
+  - columns: [instructor_rank]
+    type: "index"
+    usage: "Common for analyzing by faculty rank"

@@ -1,0 +1,412 @@
+table_name: student_activity_engagement
+version: "1.0"
+record_count: 15000
+
+metadata:
+  purpose: "Student extracurricular activities, engagement, and leadership involvement"
+  updated_at: "2026-01-14"
+
+columns:
+  # Student Context (Denormalized)
+  - name: student_id
+    type: INTEGER
+    description: "Unique identifier for each student"
+    nullable: false
+    statistics:
+      min: 1
+      max: 10000
+
+  - name: student_first_name
+    type: VARCHAR(100)
+    description: "Student's first name"
+    nullable: false
+
+  - name: student_last_name
+    type: VARCHAR(100)
+    description: "Student's last name"
+    nullable: false
+
+  - name: student_email
+    type: VARCHAR(200)
+    description: "Student's email address"
+    nullable: false
+
+  - name: student_major
+    type: VARCHAR(100)
+    description: "Student's declared major"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - "Computer Science"
+      - "Business"
+      - "Engineering"
+      - "Biology"
+      - "Psychology"
+      - "Economics"
+      - "Mathematics"
+      - "English"
+      - "History"
+      - "Physics"
+
+  - name: student_gpa
+    type: DECIMAL(3,2)
+    description: "Student's current GPA"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 2.00
+      max: 4.00
+
+  - name: student_status
+    type: VARCHAR(50)
+    description: "Current enrollment status"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - "Active"
+      - "Graduated"
+      - "On Leave"
+
+  - name: student_year
+    type: VARCHAR(20)
+    description: "Student's academic year level"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - value: "Freshman"
+        description: "First year student"
+      - value: "Sophomore"
+        description: "Second year student"
+      - value: "Junior"
+        description: "Third year student"
+      - value: "Senior"
+        description: "Fourth year student"
+
+  - name: student_credits_completed
+    type: INTEGER
+    description: "Total credits completed by student"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 0
+      max: 120
+
+  # Department Context
+  - name: department_id
+    type: INTEGER
+    description: "Department ID associated with student's major"
+    nullable: false
+    statistics:
+      min: 1
+      max: 20
+
+  - name: department_name
+    type: VARCHAR(100)
+    description: "Department name matching student's major"
+    nullable: false
+    value_type: categorical
+
+  # Activity Details (Denormalized per activity)
+  - name: activity_id
+    type: VARCHAR(50)
+    description: "Unique identifier for this activity participation record"
+    nullable: false
+    primary_key: true
+
+  - name: activity_name
+    type: VARCHAR(100)
+    description: "Name of the specific activity"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - "Basketball Team"
+      - "Computer Science Club"
+      - "Volunteer Corps"
+      - "Cultural Society"
+      - "Student Senate"
+      - "Debate Team"
+      - "Math Club"
+      - "Community Service"
+      - "Drama Club"
+      - "Engineering Society"
+      - "Chess Club"
+      - "Environmental Club"
+      - "Music Ensemble"
+    query_notes: "13 distinct activity names in dataset"
+
+  - name: activity_type
+    type: VARCHAR(50)
+    description: "Category of activity"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - value: "Sports"
+        description: "Athletic teams and sports"
+        frequency: 0.20
+      - value: "Academic Club"
+        description: "Academic-focused clubs and societies"
+        frequency: 0.20
+      - value: "Volunteer"
+        description: "Volunteer and community service"
+        frequency: 0.20
+      - value: "Cultural Club"
+        description: "Cultural and diversity organizations"
+        frequency: 0.20
+      - value: "Student Government"
+        description: "Student governance and leadership"
+        frequency: 0.20
+    query_notes: "Evenly distributed across activity types"
+
+  - name: student_role
+    type: VARCHAR(50)
+    description: "Student's role in the activity"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - value: "Member"
+        description: "Regular member"
+      - value: "Officer"
+        description: "Officer position"
+      - value: "President"
+        description: "President/head"
+      - value: "Vice President"
+        description: "Vice president"
+      - value: "Secretary"
+        description: "Secretary position"
+
+  - name: activity_status
+    type: VARCHAR(20)
+    description: "Current status of participation"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - value: "Active"
+        description: "Currently participating"
+      - value: "Inactive"
+        description: "No longer active"
+      - value: "Completed"
+        description: "Participation completed"
+
+  - name: join_date
+    type: DATE
+    description: "Date student joined the activity"
+    nullable: false
+    value_type: continuous
+    statistics:
+      range: "Last 2 years from data generation date"
+
+  - name: hours_per_week
+    type: DECIMAL(4,1)
+    description: "Average hours per week spent on this activity"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 2.0
+      max: 15.0
+
+  - name: total_hours_committed
+    type: DECIMAL(7,1)
+    description: "Total hours committed to this activity"
+    nullable: false
+    value_type: continuous
+    query_notes: "Calculated as hours_per_week × weeks_active"
+
+  # Aggregated Metrics (Pre-calculated)
+  - name: total_activities
+    type: INTEGER
+    description: "Total number of activities student is involved in"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 1
+      max: 5
+    query_notes: "Pre-aggregated count per student"
+
+  - name: active_activities_count
+    type: INTEGER
+    description: "Number of currently active activities"
+    nullable: false
+    value_type: continuous
+    query_notes: "Pre-aggregated count where activity_status = 'Active'"
+
+  - name: leadership_positions_count
+    type: INTEGER
+    description: "Number of leadership positions held"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 0
+      max: 2
+    query_notes: "Count of Officer, President, VP positions"
+
+  - name: total_hours_per_week
+    type: DECIMAL(5,1)
+    description: "Total hours per week across all activities"
+    nullable: false
+    value_type: continuous
+    query_notes: "Sum of hours_per_week for all student's activities"
+
+  - name: total_community_service_hours
+    type: DECIMAL(7,1)
+    description: "Total community service hours"
+    nullable: false
+    value_type: continuous
+    query_notes: "Hours from Volunteer activities only"
+
+  - name: total_academic_society_hours
+    type: DECIMAL(7,1)
+    description: "Total academic society/club hours"
+    nullable: false
+    value_type: continuous
+    query_notes: "Hours from Academic Club activities only"
+
+  # Activity Type Breakdown
+  - name: sports_activities_count
+    type: INTEGER
+    description: "Number of sports activities"
+    nullable: false
+    value_type: continuous
+    query_notes: "Count where activity_type = 'Sports'"
+
+  - name: academic_clubs_count
+    type: INTEGER
+    description: "Number of academic club memberships"
+    nullable: false
+    value_type: continuous
+    query_notes: "Count where activity_type = 'Academic Club'"
+
+  - name: volunteer_activities_count
+    type: INTEGER
+    description: "Number of volunteer activities"
+    nullable: false
+    value_type: continuous
+    query_notes: "Count where activity_type = 'Volunteer'"
+
+  - name: cultural_clubs_count
+    type: INTEGER
+    description: "Number of cultural club memberships"
+    nullable: false
+    value_type: continuous
+    query_notes: "Count where activity_type = 'Cultural Club'"
+
+  # Engagement Metrics
+  - name: engagement_score
+    type: DECIMAL(5,2)
+    description: "Overall engagement score"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 50.00
+      max: 100.00
+    query_notes: "Composite metric of activity involvement"
+
+  - name: is_highly_engaged
+    type: BOOLEAN
+    description: "True if total_activities >= 3"
+    nullable: false
+    value_type: boolean
+    query_notes: "Identifies highly engaged students"
+
+  - name: weeks_active
+    type: INTEGER
+    description: "Number of weeks actively participating"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 4
+      max: 40
+
+  - name: semesters_active
+    type: INTEGER
+    description: "Number of semesters actively participating"
+    nullable: false
+    value_type: continuous
+    query_notes: "Calculated as weeks_active / 16"
+
+  # Correlation Metrics
+  - name: gpa_vs_activity_hours
+    type: DECIMAL(4,2)
+    description: "Correlation between GPA and activity hours"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: -0.50
+      max: 0.50
+    query_notes: "Positive means higher GPA with more activities"
+
+  - name: retention_risk_score
+    type: DECIMAL(5,2)
+    description: "Risk score for student retention"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 0.00
+      max: 100.00
+    query_notes: "Higher score indicates higher risk"
+
+  # Flags
+  - name: is_student_leader
+    type: BOOLEAN
+    description: "True if leadership_positions_count > 0"
+    nullable: false
+    value_type: boolean
+    query_notes: "Identifies student leaders"
+
+  - name: is_athlete
+    type: BOOLEAN
+    description: "True if activity_type = 'Sports'"
+    nullable: false
+    value_type: boolean
+    query_notes: "Identifies student athletes"
+
+  - name: is_volunteer
+    type: BOOLEAN
+    description: "True if activity_type = 'Volunteer'"
+    nullable: false
+    value_type: boolean
+    query_notes: "Identifies students doing community service"
+
+  - name: is_academic_club_member
+    type: BOOLEAN
+    description: "True if activity_type = 'Academic Club'"
+    nullable: false
+    value_type: boolean
+    query_notes: "Identifies academic club members"
+
+  - name: has_multiple_activities
+    type: BOOLEAN
+    description: "True if total_activities > 1"
+    nullable: false
+    value_type: boolean
+    query_notes: "Identifies students with diverse involvement"
+
+# Relationships
+relationships:
+  - target_table: "student_enrollment_analytics"
+    join_keys:
+      - student_id
+    relationship_type: "many-to-one"
+    description: "Many activity records per student"
+
+  - target_table: "student_academic_performance"
+    join_keys:
+      - student_id
+    relationship_type: "many-to-one"
+    description: "Can correlate activities with academic performance"
+
+# Indexes
+indexes:
+  - columns: [activity_id]
+    type: "primary_key"
+  - columns: [student_id]
+    type: "index"
+    usage: "Frequently used for student-level analysis"
+  - columns: [activity_type]
+    type: "index"
+    usage: "Common for filtering by activity category"
+  - columns: [is_student_leader]
+    type: "index"
+    usage: "Frequently used to identify leaders"
+  - columns: [is_highly_engaged]
+    type: "index"
+    usage: "Common filter for engagement analysis"

@@ -1,0 +1,374 @@
+table_name: financial_summary_by_student
+version: "1.0"
+record_count: 10000
+
+metadata:
+  purpose: "Financial data including payments, scholarships, and balances"
+  updated_at: "2026-01-14"
+
+columns:
+  # Student Context (Denormalized)
+  - name: student_id
+    type: INTEGER
+    description: "Unique identifier for each student"
+    nullable: false
+    primary_key: true
+    statistics:
+      min: 1
+      max: 10000
+      distinct_count: 10000
+
+  - name: student_first_name
+    type: VARCHAR(100)
+    description: "Student's first name"
+    nullable: false
+
+  - name: student_last_name
+    type: VARCHAR(100)
+    description: "Student's last name"
+    nullable: false
+
+  - name: student_email
+    type: VARCHAR(200)
+    description: "Student's email address"
+    nullable: false
+
+  - name: student_major
+    type: VARCHAR(100)
+    description: "Student's declared major"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - "Computer Science"
+      - "Business"
+      - "Engineering"
+      - "Biology"
+      - "Psychology"
+      - "Economics"
+      - "Mathematics"
+      - "English"
+      - "History"
+      - "Physics"
+
+  - name: student_status
+    type: VARCHAR(50)
+    description: "Current enrollment status"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - "Active"
+      - "Graduated"
+      - "On Leave"
+      - "Withdrawn"
+
+  - name: student_gpa
+    type: DECIMAL(3,2)
+    description: "Student's current GPA"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 2.00
+      max: 4.00
+
+  - name: student_enrollment_date
+    type: DATE
+    description: "Date when student first enrolled"
+    nullable: false
+
+  # Department Context
+  - name: department_id
+    type: INTEGER
+    description: "Department ID"
+    nullable: false
+    statistics:
+      min: 1
+      max: 20
+
+  - name: department_name
+    type: VARCHAR(100)
+    description: "Department name matching student's major"
+    nullable: false
+    value_type: categorical
+
+  # Payment Aggregations (Pre-calculated)
+  - name: total_tuition_paid
+    type: DECIMAL(10,2)
+    description: "Total amount of tuition paid by student"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 0.00
+    query_notes: "Sum of all completed payments"
+
+  - name: total_tuition_due
+    type: DECIMAL(10,2)
+    description: "Total tuition amount due for the student"
+    nullable: false
+    value_type: continuous
+
+  - name: outstanding_balance
+    type: DECIMAL(10,2)
+    description: "Remaining unpaid tuition balance"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 0.00
+    query_notes: "Calculated as total_tuition_due - total_tuition_paid"
+
+  - name: total_payments_count
+    type: INTEGER
+    description: "Total number of payment transactions"
+    nullable: false
+    value_type: continuous
+
+  - name: completed_payments_count
+    type: INTEGER
+    description: "Number of successful payments"
+    nullable: false
+    value_type: continuous
+
+  - name: pending_payments_count
+    type: INTEGER
+    description: "Number of payments still pending"
+    nullable: false
+    value_type: continuous
+
+  - name: failed_payments_count
+    type: INTEGER
+    description: "Number of failed payment attempts"
+    nullable: false
+    value_type: continuous
+
+  - name: last_payment_date
+    type: DATE
+    description: "Date of most recent payment"
+    nullable: true
+    value_type: continuous
+    statistics:
+      range: "Last 1 year from data generation date"
+
+  - name: last_payment_amount
+    type: DECIMAL(10,2)
+    description: "Amount of most recent payment"
+    nullable: true
+    value_type: continuous
+    statistics:
+      min: 1000.00
+      max: 10000.00
+
+  - name: last_payment_method
+    type: VARCHAR(50)
+    description: "Payment method used for most recent payment"
+    nullable: true
+    value_type: categorical
+    possible_values:
+      - value: "Credit Card"
+        frequency: 0.25
+      - value: "Bank Transfer"
+        frequency: 0.25
+      - value: "Check"
+        frequency: 0.25
+      - value: "Financial Aid"
+        frequency: 0.25
+    query_notes: "Evenly distributed across payment methods"
+
+  # Payment Method Breakdown
+  - name: credit_card_payments_total
+    type: DECIMAL(10,2)
+    description: "Total amount paid via credit card"
+    nullable: false
+    value_type: continuous
+
+  - name: bank_transfer_total
+    type: DECIMAL(10,2)
+    description: "Total amount paid via bank transfer"
+    nullable: false
+    value_type: continuous
+
+  - name: check_payments_total
+    type: DECIMAL(10,2)
+    description: "Total amount paid via check"
+    nullable: false
+    value_type: continuous
+
+  - name: financial_aid_total
+    type: DECIMAL(10,2)
+    description: "Total amount paid via financial aid"
+    nullable: false
+    value_type: continuous
+
+  # Scholarship Aggregations (Pre-calculated)
+  - name: total_scholarships_received
+    type: DECIMAL(10,2)
+    description: "Total scholarship amount received by student"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 0.00
+
+  - name: scholarship_count
+    type: INTEGER
+    description: "Number of scholarships awarded to student"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 0
+
+  - name: merit_scholarships_total
+    type: DECIMAL(10,2)
+    description: "Total amount from merit-based scholarships"
+    nullable: false
+    value_type: continuous
+
+  - name: need_based_scholarships_total
+    type: DECIMAL(10,2)
+    description: "Total amount from need-based scholarships"
+    nullable: false
+    value_type: continuous
+
+  - name: athletic_scholarships_total
+    type: DECIMAL(10,2)
+    description: "Total amount from athletic scholarships"
+    nullable: false
+    value_type: continuous
+
+  - name: departmental_scholarships_total
+    type: DECIMAL(10,2)
+    description: "Total amount from departmental scholarships"
+    nullable: false
+    value_type: continuous
+
+  - name: largest_scholarship_amount
+    type: DECIMAL(10,2)
+    description: "Amount of largest single scholarship"
+    nullable: true
+    value_type: continuous
+
+  - name: latest_scholarship_date
+    type: DATE
+    description: "Date of most recent scholarship award"
+    nullable: true
+
+  # Financial Metrics (Pre-calculated)
+  - name: net_tuition_after_scholarships
+    type: DECIMAL(10,2)
+    description: "Net tuition cost after scholarship deductions"
+    nullable: false
+    value_type: continuous
+    query_notes: "Calculated as total_tuition_due - total_scholarships_received"
+
+  - name: scholarship_coverage_rate_pct
+    type: DECIMAL(5,2)
+    description: "Percentage of tuition covered by scholarships"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 0.00
+      max: 100.00
+    query_notes: "Useful for identifying scholarship effectiveness. >= 75% indicates most tuition covered, 50-74% indicates significant coverage"
+
+  - name: payment_success_rate_pct
+    type: DECIMAL(5,2)
+    description: "Percentage of successful payments out of total attempts"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 0.00
+      max: 100.00
+
+  - name: avg_payment_amount
+    type: DECIMAL(10,2)
+    description: "Average amount per payment transaction"
+    nullable: false
+    value_type: continuous
+
+  # Semester Breakdown
+  - name: fall_2024_tuition
+    type: DECIMAL(10,2)
+    description: "Tuition for Fall 2024 semester"
+    nullable: false
+    value_type: continuous
+
+  - name: fall_2024_scholarships
+    type: DECIMAL(10,2)
+    description: "Scholarships received for Fall 2024"
+    nullable: false
+    value_type: continuous
+
+  - name: spring_2024_tuition
+    type: DECIMAL(10,2)
+    description: "Tuition for Spring 2024 semester"
+    nullable: false
+    value_type: continuous
+
+  - name: spring_2024_scholarships
+    type: DECIMAL(10,2)
+    description: "Scholarships received for Spring 2024"
+    nullable: false
+    value_type: continuous
+
+  - name: fall_2023_tuition
+    type: DECIMAL(10,2)
+    description: "Tuition for Fall 2023 semester"
+    nullable: false
+    value_type: continuous
+
+  - name: fall_2023_scholarships
+    type: DECIMAL(10,2)
+    description: "Scholarships received for Fall 2023"
+    nullable: false
+    value_type: continuous
+
+  # Flags
+  - name: has_outstanding_balance
+    type: BOOLEAN
+    description: "True if student has unpaid tuition balance"
+    nullable: false
+    value_type: boolean
+    query_notes: "Useful for identifying students with payment issues"
+
+  - name: is_scholarship_recipient
+    type: BOOLEAN
+    description: "True if student has received any scholarships"
+    nullable: false
+    value_type: boolean
+
+  - name: is_payment_plan_active
+    type: BOOLEAN
+    description: "True if student is on a payment plan"
+    nullable: false
+    value_type: boolean
+
+  - name: is_financial_aid_recipient
+    type: BOOLEAN
+    description: "True if student receives financial aid"
+    nullable: false
+    value_type: boolean
+
+# Relationships
+relationships:
+  - target_table: "student_enrollment_analytics"
+    join_keys:
+      - student_id
+    relationship_type: "one-to-one"
+    description: "One financial summary per student"
+
+  - target_table: "scholarship_recipient_analysis"
+    join_keys:
+      - student_id
+    relationship_type: "one-to-many"
+    description: "Detailed scholarship records for each student"
+
+# Indexes
+indexes:
+  - columns: [student_id]
+    type: "primary_key"
+  - columns: [has_outstanding_balance]
+    type: "index"
+    usage: "Frequently used to identify students with payment issues"
+  - columns: [is_scholarship_recipient]
+    type: "index"
+    usage: "Frequently used for scholarship-related queries"
+  - columns: [scholarship_coverage_rate_pct]
+    type: "index"
+    usage: "Common for analyzing scholarship effectiveness"

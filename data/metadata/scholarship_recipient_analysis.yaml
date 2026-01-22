@@ -1,0 +1,524 @@
+table_name: scholarship_recipient_analysis
+version: "1.0"
+record_count: 8000
+
+metadata:
+  purpose: "Scholarship effectiveness, recipient performance, and ROI tracking"
+  updated_at: "2026-01-14"
+
+columns:
+  # Student Context (Denormalized)
+  - name: student_id
+    type: INTEGER
+    description: "Unique identifier for each student"
+    nullable: false
+    statistics:
+      min: 1
+      max: 10000
+
+  - name: student_first_name
+    type: VARCHAR(100)
+    description: "Student's first name"
+    nullable: false
+
+  - name: student_last_name
+    type: VARCHAR(100)
+    description: "Student's last name"
+    nullable: false
+
+  - name: student_email
+    type: VARCHAR(200)
+    description: "Student's email address"
+    nullable: false
+
+  - name: student_major
+    type: VARCHAR(100)
+    description: "Student's declared major"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - "Computer Science"
+      - "Business"
+      - "Engineering"
+      - "Biology"
+      - "Psychology"
+      - "Economics"
+      - "Mathematics"
+      - "English"
+      - "History"
+      - "Physics"
+
+  - name: student_status
+    type: VARCHAR(50)
+    description: "Current enrollment status"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - "Active"
+      - "Graduated"
+      - "On Leave"
+
+  - name: student_enrollment_date
+    type: DATE
+    description: "Date when student first enrolled"
+    nullable: false
+
+  - name: student_cohort
+    type: INTEGER
+    description: "Year student first enrolled (cohort year)"
+    nullable: false
+    value_type: continuous
+
+  # Academic Performance (Denormalized)
+  - name: current_gpa
+    type: DECIMAL(3,2)
+    description: "Student's current GPA"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 2.00
+      max: 4.00
+
+  - name: cumulative_gpa
+    type: DECIMAL(3,2)
+    description: "Student's cumulative GPA"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 2.00
+      max: 4.00
+
+  - name: credits_completed
+    type: INTEGER
+    description: "Total credits completed by student"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 0
+      max: 120
+
+  - name: semesters_enrolled
+    type: INTEGER
+    description: "Number of semesters student has been enrolled"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 2
+      max: 8
+
+  - name: academic_standing
+    type: VARCHAR(20)
+    description: "Student's current academic standing"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - value: "Good"
+        description: "GPA >= 3.0"
+      - value: "Warning"
+        description: "GPA < 3.0"
+    query_notes: "Based on current_gpa threshold of 3.0"
+
+  # Scholarship Details (Denormalized per scholarship)
+  - name: scholarship_id
+    type: VARCHAR(50)
+    description: "Unique identifier for this scholarship award"
+    nullable: false
+    primary_key: true
+
+  - name: scholarship_name
+    type: VARCHAR(100)
+    description: "Name of the scholarship"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - "Presidential Scholarship"
+      - "Dean's Scholarship"
+      - "Athletic Excellence"
+      - "STEM Innovation Grant"
+      - "Community Service Award"
+      - "Leadership Scholarship"
+      - "First Generation Grant"
+      - "Diversity Scholarship"
+    query_notes: "8 distinct scholarship names"
+
+  - name: scholarship_type
+    type: VARCHAR(50)
+    description: "Category of scholarship"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - value: "Merit"
+        description: "Based on academic achievement"
+        frequency: 0.25
+      - value: "Need-Based"
+        description: "Based on financial need"
+        frequency: 0.25
+      - value: "Athletic"
+        description: "For student athletes"
+        frequency: 0.25
+      - value: "Departmental"
+        description: "Department-specific awards"
+        frequency: 0.25
+    query_notes: "Evenly distributed across types"
+
+  - name: scholarship_amount
+    type: DECIMAL(10,2)
+    description: "Amount of this specific scholarship award"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 1000.00
+      max: 15000.00
+
+  - name: award_date
+    type: DATE
+    description: "Date when scholarship was awarded"
+    nullable: false
+    value_type: continuous
+    statistics:
+      range: "Between 3 years and 1 year ago from data generation"
+
+  - name: academic_year
+    type: VARCHAR(20)
+    description: "Academic year of the award (e.g., '2023-2024')"
+    nullable: false
+    value_type: categorical
+
+  - name: is_renewable
+    type: BOOLEAN
+    description: "True if scholarship can be renewed"
+    nullable: false
+    value_type: boolean
+
+  - name: gpa_requirement
+    type: DECIMAL(3,2)
+    description: "Minimum GPA required to maintain scholarship"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 2.50
+      max: 3.50
+
+  - name: renewal_count
+    type: INTEGER
+    description: "Number of times scholarship has been renewed"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 0
+      max: 3
+
+  # Aggregated Scholarship Metrics (Pre-calculated)
+  - name: total_scholarships
+    type: INTEGER
+    description: "Total number of scholarships student has received"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 1
+      max: 3
+    query_notes: "Pre-aggregated count per student"
+
+  - name: total_scholarship_amount
+    type: DECIMAL(10,2)
+    description: "Total scholarship amount across all awards"
+    nullable: false
+    value_type: continuous
+    query_notes: "Sum of all scholarship_amount values"
+
+  - name: merit_scholarship_total
+    type: DECIMAL(10,2)
+    description: "Total amount from merit-based scholarships"
+    nullable: false
+    value_type: continuous
+
+  - name: need_based_total
+    type: DECIMAL(10,2)
+    description: "Total amount from need-based scholarships"
+    nullable: false
+    value_type: continuous
+
+  - name: athletic_scholarship_total
+    type: DECIMAL(10,2)
+    description: "Total amount from athletic scholarships"
+    nullable: false
+    value_type: continuous
+
+  - name: departmental_total
+    type: DECIMAL(10,2)
+    description: "Total amount from departmental scholarships"
+    nullable: false
+    value_type: continuous
+
+  - name: avg_scholarship_amount
+    type: DECIMAL(10,2)
+    description: "Average scholarship amount per award"
+    nullable: false
+    value_type: continuous
+    query_notes: "Calculated as total_scholarship_amount / total_scholarships"
+
+  - name: largest_scholarship
+    type: DECIMAL(10,2)
+    description: "Amount of largest single scholarship"
+    nullable: false
+    value_type: continuous
+
+  # Financial Context
+  - name: total_tuition_paid
+    type: DECIMAL(10,2)
+    description: "Total tuition paid by student"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 20000.00
+      max: 60000.00
+
+  - name: scholarship_coverage_pct
+    type: DECIMAL(5,2)
+    description: "Percentage of tuition covered by scholarships"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 0.00
+      max: 100.00
+    query_notes: "Calculated as (total_scholarship_amount / estimated_tuition) × 100"
+
+  - name: net_tuition_cost
+    type: DECIMAL(10,2)
+    description: "Net tuition after scholarships"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 10000.00
+      max: 50000.00
+
+  - name: has_additional_aid
+    type: BOOLEAN
+    description: "True if student receives other financial aid"
+    nullable: false
+    value_type: boolean
+
+  # Performance Metrics (Pre-calculated)
+  - name: semesters_since_award
+    type: INTEGER
+    description: "Number of semesters since scholarship was awarded"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 1
+      max: 6
+
+  - name: gpa_at_award
+    type: DECIMAL(3,2)
+    description: "Student's GPA when scholarship was awarded"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 3.00
+      max: 4.00
+
+  - name: gpa_current
+    type: DECIMAL(3,2)
+    description: "Student's current GPA"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 2.00
+      max: 4.00
+
+  - name: gpa_change_since_award
+    type: DECIMAL(3,2)
+    description: "Change in GPA since scholarship award"
+    nullable: false
+    value_type: continuous
+    query_notes: "Calculated as gpa_current - gpa_at_award. Positive = improved"
+
+  - name: met_gpa_requirement
+    type: BOOLEAN
+    description: "True if current GPA meets scholarship requirement"
+    nullable: false
+    value_type: boolean
+    query_notes: "Compares gpa_current to gpa_requirement"
+
+  - name: courses_passed_since_award
+    type: INTEGER
+    description: "Number of courses passed since receiving scholarship"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 10
+      max: 40
+
+  - name: credits_earned_since_award
+    type: INTEGER
+    description: "Credits earned since receiving scholarship"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 30
+      max: 120
+
+  # Retention Metrics
+  - name: is_still_enrolled
+    type: BOOLEAN
+    description: "True if student_status = 'Active'"
+    nullable: false
+    value_type: boolean
+    query_notes: "Indicates retention success"
+
+  - name: retention_status
+    type: VARCHAR(20)
+    description: "Current retention status"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - value: "Retained"
+        description: "Still enrolled"
+      - value: "Not Retained"
+        description: "No longer enrolled"
+
+  - name: graduation_status
+    type: VARCHAR(20)
+    description: "Graduation progress"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - value: "In Progress"
+        description: "Still working toward degree"
+      - value: "Graduated"
+        description: "Completed degree"
+
+  - name: semesters_retained
+    type: INTEGER
+    description: "Number of semesters student has been retained"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 1
+      max: 8
+
+  - name: retention_rate_pct
+    type: DECIMAL(5,2)
+    description: "Overall retention rate"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 85.00
+      max: 98.00
+
+  # Comparative Metrics
+  - name: gpa_vs_non_scholarship_avg
+    type: DECIMAL(4,2)
+    description: "GPA compared to non-scholarship students"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: -0.30
+      max: 0.50
+    query_notes: "Positive means higher than non-scholarship average"
+
+  - name: retention_vs_non_scholarship
+    type: DECIMAL(5,2)
+    description: "Retention rate compared to non-scholarship students"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 0.00
+      max: 15.00
+    query_notes: "Percentage point difference"
+
+  - name: graduation_rate_vs_average
+    type: DECIMAL(5,2)
+    description: "Graduation rate compared to overall average"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: -5.00
+      max: 10.00
+
+  # ROI Metrics (Pre-calculated)
+  - name: scholarship_per_credit_hour
+    type: DECIMAL(7,2)
+    description: "Scholarship amount per credit hour earned"
+    nullable: false
+    value_type: continuous
+    query_notes: "Calculated as total_scholarship_amount / credits_completed"
+
+  - name: scholarship_roi_score
+    type: DECIMAL(5,2)
+    description: "Return on investment score for scholarship"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 50.00
+      max: 100.00
+    query_notes: "Composite metric of academic success and retention"
+
+  # Flags
+  - name: is_scholarship_at_risk
+    type: BOOLEAN
+    description: "True if gpa_current < 2.5"
+    nullable: false
+    value_type: boolean
+    query_notes: "Identifies students at risk of losing scholarship"
+
+  - name: is_high_performer
+    type: BOOLEAN
+    description: "True if gpa_current >= 3.7"
+    nullable: false
+    value_type: boolean
+    query_notes: "Identifies scholarship recipients excelling academically"
+
+  - name: is_scholarship_renewed
+    type: BOOLEAN
+    description: "True if scholarship has been renewed at least once"
+    nullable: false
+    value_type: boolean
+    query_notes: "Based on renewal_count > 0"
+
+  - name: meets_requirements
+    type: BOOLEAN
+    description: "True if student meets all scholarship requirements"
+    nullable: false
+    value_type: boolean
+    query_notes: "Combines GPA and enrollment status checks"
+
+# Relationships
+relationships:
+  - target_table: "financial_summary_by_student"
+    join_keys:
+      - student_id
+    relationship_type: "many-to-one"
+    description: "Multiple scholarship records per student financial summary"
+
+  - target_table: "student_academic_performance"
+    join_keys:
+      - student_id
+    relationship_type: "many-to-one"
+    description: "Can correlate scholarship with academic outcomes"
+
+  - target_table: "student_enrollment_analytics"
+    join_keys:
+      - student_id
+    relationship_type: "many-to-one"
+    description: "Links scholarship recipients to enrollment data"
+
+# Indexes
+indexes:
+  - columns: [scholarship_id]
+    type: "primary_key"
+  - columns: [student_id]
+    type: "index"
+    usage: "Frequently used for student-level analysis"
+  - columns: [scholarship_type]
+    type: "index"
+    usage: "Common filter for scholarship type analysis"
+  - columns: [is_scholarship_at_risk]
+    type: "index"
+    usage: "Frequently used to identify at-risk students"
+  - columns: [is_high_performer]
+    type: "index"
+    usage: "Common filter for success stories"
+  - columns: [meets_requirements]
+    type: "index"
+    usage: "Frequently used for compliance tracking"

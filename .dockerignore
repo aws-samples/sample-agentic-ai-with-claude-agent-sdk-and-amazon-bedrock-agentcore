@@ -1,0 +1,27 @@
+# Notebooks and workshop modules
+module-*/
+*.ipynb
+# Data files (already in S3)
+data/demo_data/
+# Results (generated at runtime)
+results/
+# Git
+.git/
+.gitignore
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+# Environment files (secrets)
+.env
+.env.*
+# IDE
+.vscode/
+.idea/
+# Logs
+*.log
+dev_server.log
+# Docker
+Dockerfile
+.dockerignore

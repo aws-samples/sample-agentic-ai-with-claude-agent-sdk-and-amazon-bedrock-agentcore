@@ -1,0 +1,413 @@
+table_name: attendance_behavior_analytics
+version: "1.0"
+record_count: 30000
+
+metadata:
+  purpose: "Attendance patterns, behavior tracking, and correlation with academic performance"
+  updated_at: "2026-01-14"
+
+columns:
+  # Student Context (Denormalized)
+  - name: student_id
+    type: INTEGER
+    description: "Unique identifier for each student"
+    nullable: false
+    statistics:
+      min: 1
+      max: 10000
+
+  - name: student_first_name
+    type: VARCHAR(100)
+    description: "Student's first name"
+    nullable: false
+
+  - name: student_last_name
+    type: VARCHAR(100)
+    description: "Student's last name"
+    nullable: false
+
+  - name: student_email
+    type: VARCHAR(200)
+    description: "Student's email address"
+    nullable: false
+
+  - name: student_major
+    type: VARCHAR(100)
+    description: "Student's declared major"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - "Computer Science"
+      - "Business"
+      - "Engineering"
+      - "Biology"
+      - "Psychology"
+      - "Economics"
+      - "Mathematics"
+      - "English"
+      - "History"
+      - "Physics"
+
+  - name: student_gpa
+    type: DECIMAL(3,2)
+    description: "Student's current GPA"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 2.00
+      max: 4.00
+
+  - name: student_status
+    type: VARCHAR(50)
+    description: "Current enrollment status"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - "Active"
+      - "Graduated"
+      - "On Leave"
+
+  # Course Context (Denormalized)
+  - name: course_id
+    type: INTEGER
+    description: "Unique identifier for the course"
+    nullable: false
+    statistics:
+      min: 1
+      max: 500
+
+  - name: course_code
+    type: VARCHAR(20)
+    description: "Course code (e.g., CS101)"
+    nullable: false
+
+  - name: course_name
+    type: VARCHAR(200)
+    description: "Full name of the course"
+    nullable: false
+
+  - name: course_credits
+    type: INTEGER
+    description: "Number of credits for the course"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - 3
+      - 4
+      - 5
+
+  - name: instructor_name
+    type: VARCHAR(200)
+    description: "Full name of the course instructor"
+    nullable: false
+
+  - name: department_name
+    type: VARCHAR(100)
+    description: "Department offering the course"
+    nullable: false
+    value_type: categorical
+
+  - name: semester
+    type: VARCHAR(50)
+    description: "Semester when attendance is tracked"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - "Fall 2024"
+      - "Spring 2024"
+      - "Fall 2023"
+      - "Spring 2023"
+
+  # Attendance Metrics (Pre-aggregated)
+  - name: total_class_sessions
+    type: INTEGER
+    description: "Total number of class sessions in the course"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 25
+      max: 40
+    query_notes: "Total sessions for the entire semester"
+
+  - name: classes_attended
+    type: INTEGER
+    description: "Number of classes student attended"
+    nullable: false
+    value_type: continuous
+    query_notes: "Pre-aggregated count of attended sessions"
+
+  - name: classes_absent
+    type: INTEGER
+    description: "Number of classes student was absent"
+    nullable: false
+    value_type: continuous
+    query_notes: "Calculated as total_sessions - attended"
+
+  - name: classes_late
+    type: INTEGER
+    description: "Number of times student arrived late"
+    nullable: false
+    value_type: continuous
+    query_notes: "Subset of classes_attended"
+
+  - name: classes_excused
+    type: INTEGER
+    description: "Number of excused absences"
+    nullable: false
+    value_type: continuous
+    query_notes: "Subset of classes_absent"
+
+  - name: attendance_rate_pct
+    type: DECIMAL(5,2)
+    description: "Percentage of classes attended"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 60.00
+      max: 100.00
+    query_notes: "Calculated as (classes_attended / total_sessions) × 100"
+
+  - name: absence_rate_pct
+    type: DECIMAL(5,2)
+    description: "Percentage of classes missed"
+    nullable: false
+    value_type: continuous
+    query_notes: "Calculated as (classes_absent / total_sessions) × 100"
+
+  - name: late_rate_pct
+    type: DECIMAL(5,2)
+    description: "Percentage of attended classes where student was late"
+    nullable: false
+    value_type: continuous
+    query_notes: "Calculated as (classes_late / classes_attended) × 100"
+
+  # Student-level Aggregations
+  - name: student_total_classes
+    type: INTEGER
+    description: "Total classes across all courses for student"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 100
+      max: 200
+    query_notes: "Pre-aggregated across all student's courses"
+
+  - name: student_attendance_rate_pct
+    type: DECIMAL(5,2)
+    description: "Student's overall attendance rate across all courses"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 60.00
+      max: 98.00
+    query_notes: "Pre-aggregated student-level metric"
+
+  - name: student_chronic_absences
+    type: INTEGER
+    description: "Number of chronic absence incidents"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 0
+      max: 10
+    query_notes: "Count of extended absence patterns"
+
+  - name: student_consecutive_absences
+    type: INTEGER
+    description: "Maximum consecutive absences"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 0
+      max: 5
+
+  # Course-level Aggregations
+  - name: course_avg_attendance_rate
+    type: DECIMAL(5,2)
+    description: "Average attendance rate for all students in course"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 75.00
+      max: 92.00
+    query_notes: "Pre-calculated course-level average"
+
+  - name: course_absent_count
+    type: INTEGER
+    description: "Total absences across all students in course"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 5
+      max: 20
+
+  # Time Patterns
+  - name: recent_week_attendance_rate
+    type: DECIMAL(5,2)
+    description: "Attendance rate for most recent week"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 60.00
+      max: 100.00
+    query_notes: "Short-term trend indicator"
+
+  - name: recent_month_attendance_rate
+    type: DECIMAL(5,2)
+    description: "Attendance rate for most recent month"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 65.00
+      max: 98.00
+
+  - name: attendance_trend
+    type: VARCHAR(20)
+    description: "Overall trend in attendance"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - value: "Improving"
+        description: "Attendance is getting better"
+      - value: "Stable"
+        description: "Attendance is consistent"
+      - value: "Declining"
+        description: "Attendance is worsening"
+
+  - name: last_absence_date
+    type: DATE
+    description: "Date of most recent absence"
+    nullable: true
+    value_type: continuous
+    statistics:
+      range: "Last 60 days from data generation date"
+
+  - name: days_since_last_absence
+    type: INTEGER
+    description: "Number of days since last absence"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 0
+      max: 60
+
+  # Performance Correlation
+  - name: student_grade_in_course
+    type: DECIMAL(3,2)
+    description: "Student's grade in this course"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 1.50
+      max: 4.00
+
+  - name: attendance_grade_correlation
+    type: DECIMAL(4,2)
+    description: "Correlation between attendance and grade"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 0.30
+      max: 0.80
+    query_notes: "Positive correlation indicates attendance impacts grades"
+
+  - name: attendance_percentile
+    type: INTEGER
+    description: "Student's attendance percentile in course"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 1
+      max: 100
+    query_notes: "Higher percentile = better attendance"
+
+  # Flags
+  - name: is_chronic_absenteeism
+    type: BOOLEAN
+    description: "True if attendance_rate_pct < 70"
+    nullable: false
+    value_type: boolean
+    query_notes: "Identifies students with chronic attendance issues"
+
+  - name: is_perfect_attendance
+    type: BOOLEAN
+    description: "True if classes_absent = 0"
+    nullable: false
+    value_type: boolean
+    query_notes: "Identifies students with perfect attendance"
+
+  - name: has_recent_absence_pattern
+    type: BOOLEAN
+    description: "True if recent absences indicate a pattern"
+    nullable: false
+    value_type: boolean
+    query_notes: "Identifies emerging attendance issues"
+
+  - name: is_attendance_at_risk
+    type: BOOLEAN
+    description: "True if attendance_rate_pct < 75"
+    nullable: false
+    value_type: boolean
+    query_notes: "Threshold for intervention consideration"
+
+  # Intervention
+  - name: absence_alert_sent
+    type: BOOLEAN
+    description: "True if absence alert was sent to student"
+    nullable: false
+    value_type: boolean
+    query_notes: "Triggered when attendance_rate_pct < 75"
+
+  - name: last_alert_date
+    type: DATE
+    description: "Date when last alert was sent"
+    nullable: true
+    value_type: continuous
+    statistics:
+      range: "Last 30 days from data generation date"
+
+  - name: alert_count
+    type: INTEGER
+    description: "Number of absence alerts sent"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 0
+      max: 3
+    query_notes: "Multiple alerts indicate persistent issues"
+
+# Relationships
+relationships:
+  - target_table: "student_enrollment_analytics"
+    join_keys:
+      - student_id
+      - course_id
+    relationship_type: "many-to-one"
+    description: "Attendance records for enrolled courses"
+
+  - target_table: "student_academic_performance"
+    join_keys:
+      - student_id
+      - course_id
+    relationship_type: "one-to-one"
+    description: "Can correlate attendance with grades"
+
+# Indexes
+indexes:
+  - columns: [student_id, course_id]
+    type: "composite_primary_key"
+  - columns: [student_id]
+    type: "index"
+    usage: "Frequently used for student-level queries"
+  - columns: [course_id]
+    type: "index"
+    usage: "Frequently used for course-level analysis"
+  - columns: [is_chronic_absenteeism]
+    type: "index"
+    usage: "Common filter for identifying at-risk students"
+  - columns: [is_attendance_at_risk]
+    type: "index"
+    usage: "Frequently used for intervention targeting"
+  - columns: [attendance_trend]
+    type: "index"
+    usage: "Common for trend analysis"

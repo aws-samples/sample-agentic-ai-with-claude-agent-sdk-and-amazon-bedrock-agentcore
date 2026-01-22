@@ -1,0 +1,373 @@
+table_name: student_enrollment_analytics
+version: "1.0"
+record_count: 50000
+
+metadata:
+  purpose: "All enrollment-related questions about students and courses"
+  updated_at: "2026-01-14"
+
+columns:
+  # Student Context (Denormalized)
+  - name: student_id
+    type: INTEGER
+    description: "Unique identifier for each student"
+    nullable: false
+    statistics:
+      min: 1
+      max: 10000
+      distinct_count: 10000
+
+  - name: student_first_name
+    type: VARCHAR(100)
+    description: "Student's first name"
+    nullable: false
+
+  - name: student_last_name
+    type: VARCHAR(100)
+    description: "Student's last name"
+    nullable: false
+
+  - name: student_email
+    type: VARCHAR(200)
+    description: "Student's email address"
+    nullable: false
+
+  - name: student_major
+    type: VARCHAR(100)
+    description: "Student's declared major/program of study"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - value: "Computer Science"
+        frequency: 0.10
+      - value: "Business"
+        frequency: 0.10
+      - value: "Engineering"
+        frequency: 0.10
+      - value: "Biology"
+        frequency: 0.10
+      - value: "Psychology"
+        frequency: 0.10
+      - value: "Economics"
+        frequency: 0.10
+      - value: "Mathematics"
+        frequency: 0.10
+      - value: "English"
+        frequency: 0.10
+      - value: "History"
+        frequency: 0.10
+      - value: "Physics"
+        frequency: 0.10
+    query_notes: "Distribution is relatively even across majors (~10% each)"
+
+  - name: student_gpa
+    type: DECIMAL(3,2)
+    description: "Student's current GPA"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 2.00
+      max: 4.00
+      distribution: "uniform"
+
+  - name: student_status
+    type: VARCHAR(50)
+    description: "Current enrollment status of the student"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - value: "Active"
+        description: "Currently enrolled"
+        frequency: 0.67
+      - value: "Graduated"
+        description: "Completed degree"
+        frequency: 0.17
+      - value: "On Leave"
+        description: "Temporarily not attending"
+        frequency: 0.17
+    query_notes: "Most queries should filter for student_status = 'Active'. Weighted 4:1:1 in data generation."
+
+  - name: student_enrollment_date
+    type: DATE
+    description: "Date when student first enrolled at the university"
+    nullable: false
+    value_type: continuous
+    statistics:
+      range: "Last 4 years from data generation date"
+
+  - name: student_credits_completed
+    type: INTEGER
+    description: "Total number of credits the student has completed"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 0
+      max: 120
+
+  # Course Context (Denormalized)
+  - name: course_id
+    type: INTEGER
+    description: "Unique identifier for the course"
+    nullable: false
+    statistics:
+      min: 1
+      max: 500
+      distinct_count: 500
+
+  - name: course_code
+    type: VARCHAR(20)
+    description: "Course code (e.g., CS101, MATH201)"
+    nullable: false
+
+  - name: course_name
+    type: VARCHAR(200)
+    description: "Full name of the course"
+    nullable: false
+
+  - name: course_credits
+    type: INTEGER
+    description: "Number of credits for the course"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - value: 3
+      - value: 4
+      - value: 5
+    query_notes: "Courses can be 3, 4, or 5 credits"
+
+  - name: course_type
+    type: VARCHAR(50)
+    description: "Format/delivery method of the course"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - value: "Lecture"
+        frequency: 0.20
+      - value: "Lab"
+        frequency: 0.20
+      - value: "Seminar"
+        frequency: 0.20
+      - value: "Workshop"
+        frequency: 0.20
+      - value: "Online"
+        frequency: 0.20
+    query_notes: "Distribution is even across all course types"
+
+  - name: course_semester
+    type: VARCHAR(50)
+    description: "Semester when course is offered (e.g., 'Fall 2024', 'Spring 2024')"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - value: "Fall 2024"
+      - value: "Spring 2024"
+      - value: "Fall 2023"
+      - value: "Spring 2023"
+
+  - name: course_max_enrollment
+    type: INTEGER
+    description: "Maximum number of students allowed in the course"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 20
+      max: 200
+
+  - name: course_room_number
+    type: VARCHAR(20)
+    description: "Room number where course is held"
+    nullable: false
+
+  # Department Context (Denormalized)
+  - name: department_id
+    type: INTEGER
+    description: "Unique identifier for the department"
+    nullable: false
+    statistics:
+      min: 1
+      max: 20
+      distinct_count: 20
+
+  - name: department_name
+    type: VARCHAR(100)
+    description: "Name of the department"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - "Computer Science"
+      - "Mathematics"
+      - "Physics"
+      - "Chemistry"
+      - "Biology"
+      - "English"
+      - "History"
+      - "Psychology"
+      - "Economics"
+      - "Business Administration"
+      - "Engineering"
+      - "Nursing"
+      - "Education"
+      - "Art"
+      - "Music"
+      - "Philosophy"
+      - "Sociology"
+      - "Political Science"
+      - "Communications"
+      - "Statistics"
+    query_notes: "20 departments total"
+
+  - name: dean_name
+    type: VARCHAR(100)
+    description: "Name of the department dean"
+    nullable: false
+
+  - name: building_name
+    type: VARCHAR(100)
+    description: "Building where department is located"
+    nullable: false
+
+  # Instructor Context (Denormalized)
+  - name: instructor_id
+    type: INTEGER
+    description: "Unique identifier for the instructor"
+    nullable: false
+    statistics:
+      min: 1
+      max: 200
+      distinct_count: 200
+
+  - name: instructor_first_name
+    type: VARCHAR(100)
+    description: "Instructor's first name"
+    nullable: false
+
+  - name: instructor_last_name
+    type: VARCHAR(100)
+    description: "Instructor's last name"
+    nullable: false
+
+  - name: instructor_rank
+    type: VARCHAR(50)
+    description: "Academic rank of the instructor"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - "Professor"
+      - "Associate Professor"
+      - "Assistant Professor"
+      - "Lecturer"
+      - "Adjunct"
+
+  - name: instructor_email
+    type: VARCHAR(200)
+    description: "Instructor's email address"
+    nullable: false
+
+  # Enrollment Facts
+  - name: enrollment_id
+    type: INTEGER
+    description: "Unique identifier for this enrollment record"
+    nullable: false
+    primary_key: true
+
+  - name: enrollment_date
+    type: DATE
+    description: "Date when student enrolled in this course"
+    nullable: false
+
+  - name: enrollment_status
+    type: VARCHAR(50)
+    description: "Status of this specific enrollment"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - value: "Enrolled"
+        description: "Currently active enrollment"
+        frequency: 0.60
+      - value: "Dropped"
+        description: "Student dropped the course"
+        frequency: 0.20
+      - value: "Completed"
+        description: "Student finished the course"
+        frequency: 0.20
+    query_notes: "Weighted 3:1:1 in data generation. Most queries filter for 'Enrolled'"
+
+  - name: current_enrollment_count
+    type: INTEGER
+    description: "Current number of students enrolled in this course"
+    nullable: false
+    value_type: continuous
+
+  - name: utilization_rate_pct
+    type: DECIMAL(5,2)
+    description: "Percentage of course capacity filled"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 0.00
+      max: 100.00
+    query_notes: "Calculated as (current_enrollment_count / course_max_enrollment) * 100"
+
+  # Time Dimensions
+  - name: enrollment_year
+    type: INTEGER
+    description: "Year of enrollment"
+    nullable: false
+
+  - name: enrollment_month
+    type: INTEGER
+    description: "Month of enrollment (1-12)"
+    nullable: false
+    value_type: continuous
+    statistics:
+      min: 1
+      max: 12
+
+  - name: enrollment_quarter
+    type: INTEGER
+    description: "Quarter of enrollment (1-4)"
+    nullable: false
+    value_type: categorical
+    possible_values:
+      - 1
+      - 2
+      - 3
+      - 4
+
+  - name: is_current_semester
+    type: BOOLEAN
+    description: "Flag indicating if this is the current semester"
+    nullable: false
+    value_type: boolean
+    query_notes: "Use this flag to filter for current semester enrollments"
+
+  - name: days_since_enrollment
+    type: INTEGER
+    description: "Number of days since enrollment date"
+    nullable: false
+    value_type: continuous
+
+# Relationships
+relationships:
+  - target_table: "student_academic_performance"
+    join_keys:
+      - student_id
+    relationship_type: "one-to-many"
+    description: "One student can have many performance records"
+
+# Indexes (for query optimization guidance)
+indexes:
+  - columns: [enrollment_id]
+    type: "primary_key"
+  - columns: [student_id]
+    type: "index"
+    usage: "Frequently used for joining and filtering"
+  - columns: [course_id]
+    type: "index"
+    usage: "Frequently used for course-related queries"
+  - columns: [student_status, enrollment_status]
+    type: "composite_index"
+    usage: "Common filter combination for active enrollments"
+  - columns: [is_current_semester]
+    type: "index"
+    usage: "Frequently used to filter for current semester data"
