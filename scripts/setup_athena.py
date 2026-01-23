@@ -127,8 +127,16 @@ def create_all_tables(database_name: str, bucket_name: str, prefix: str, region:
             student_major STRING,
             student_gpa DOUBLE,
             student_status STRING,
+            student_department_id INT,
+            student_department_name STRING,
+            student_dean_name STRING,
+            student_building_name STRING,
+            student_enrollment_id STRING,
             student_enrollment_date STRING,
-            student_credits_completed INT,
+            student_enrollment_status STRING,
+            enrollment_year INT,
+            enrollment_month INT,
+            enrollment_quarter INT,
             course_id STRING,
             course_code STRING,
             course_name STRING,
@@ -137,25 +145,11 @@ def create_all_tables(database_name: str, bucket_name: str, prefix: str, region:
             course_semester STRING,
             course_max_enrollment INT,
             course_room_number STRING,
-            department_id INT,
-            department_name STRING,
-            dean_name STRING,
-            building_name STRING,
-            instructor_id INT,
-            instructor_first_name STRING,
-            instructor_last_name STRING,
-            instructor_rank STRING,
-            instructor_email STRING,
-            enrollment_id STRING,
-            enrollment_date STRING,
-            enrollment_status STRING,
-            current_enrollment_count INT,
-            utilization_rate_pct DOUBLE,
-            enrollment_year INT,
-            enrollment_month INT,
-            enrollment_quarter INT,
-            is_current_semester BOOLEAN,
-            days_since_enrollment INT
+            course_instructor_id INT,
+            course_instructor_first_name STRING,
+            course_instructor_last_name STRING,
+            course_instructor_rank STRING,
+            course_instructor_email STRING
         """,
 
         'student_academic_performance': """
@@ -633,7 +627,7 @@ def setup_athena(
         bucket: S3 bucket name (required, or set S3_BUCKET_NAME env var)
         database: Athena database name (default: student_analytics)
         prefix: S3 prefix for data (default: student-analytics)
-        region: AWS region (default: from AWS_REGION env var or us-west-2)
+        region: AWS region (default: from AWS_REGION env var or us-east-1)
         data_dir: Directory containing CSV files (default: ../data/demo_data)
         skip_upload: Skip S3 upload if data already uploaded
     """

@@ -1,160 +1,150 @@
 ---
 name: enrollment-analytics
-description: Analyze student enrollment trends, course capacity utilization, enrollment patterns by semester/department/major, student retention, course popularity, and over-enrolled or under-enrolled courses. Use when user asks about enrollment, course registration, capacity planning, or enrollment status tracking.
+description: Analyze student enrollment data with focus on student-centric queries including student counts, enrollment analysis, course loads, and tracking student enrollment changes over time. 
 ---
+
+# General rules:
+- Current semester is Fall 2025.
+- **CRITICAL**: When generating SQL query, you should focus on answering user's question, rather than over-analysing things you are not asked for.
+- DO NOT sort by id columns
+- Use ROUND(AVG(), 1) for averages operation
 
 # Enrollment Analytics
 
 ## Primary Table
-**student_enrollment_analytics** - Metadata: `data/metadata/student_enrollment_analytics.yaml`
+**student_enrollment_analytics**
+- Metadata: `data/metadata/student_enrollment_analytics.yaml`
+- Sample data: `data/metadata/student_enrollment_analytics_sample_data.csv`
 
-## Related Tables
-- **student_activity_engagement** - Extracurricular involvement
-- **library_usage_patterns** - Library utilization
-- **department_summary_metrics** - Department-level enrollment
+**CRITICAL**: You MUST read BOTH files before writing ANY SQL query:
+1. Read `data/metadata/student_enrollment_analytics.yaml` for complete schema
+2. Read `data/metadata/student_enrollment_analytics_sample_data.csv` for actual data examples
 
-## Pre-Calculated Metrics
-- Utilization: `utilization_rate_pct`, `current_enrollment_count`, `course_max_enrollment`
-- Flags: `is_current_semester`, `days_since_enrollment`
+## Table Structure
 
-## Key Thresholds
-**Utilization Rate:**
-- >= 100%: Over-enrolled (need more sections)
-- 90-99%: Near capacity (popular)
-- 50-89%: Healthy enrollment
-- < 50%: Under-enrolled (may cancel)
+**Student-Centric Design:**
+This table is a **left join with students as the left table**, meaning:
+- Each row represents one student-course enrollment
+- One student can have multiple rows (one per enrolled course)
+- When counting students, ALWAYS use `COUNT(DISTINCT student_id)` to avoid double-counting
 
-**Enrollment Status Values:**
-- 'Enrolled': Currently active
-- 'Dropped': Student dropped course
-- 'Completed': Student finished course
-- 'Waitlisted': Student on waitlist
+**Key Column Prefixes:**
+- `student_*` - Student information (id, name, major, GPA, status)
+- `student_department_*` - Department for student's major
+- `student_enrollment_*` - Course enrollment details (id, date, status)
+- `course_*` - Course information (id, code, name, semester, type)
+- `course_instructor_*` - Instructor teaching the course
 
-## Query Patterns
+**IMPORTANT**: There are NO pre-calculated metrics. You must calculate:
+- Enrollment student counts: `COUNT(DISTINCT student_id)`
+- Course counts per student: `COUNT(DISTINCT course_id)`
+- Current semester filter: `WHERE course_semester = 'Fall 2025'`
 
-**CRITICAL RULE: When querying for "current" or "currently enrolled" students, or if the current status in natural language is inferred, ALWAYS use ALL THREE filters:**
+## Natural Language to SQL Mappings
+
+### ⚠️ CRITICAL: "Current" or "Currently Enrolled"
+
+When user asks about **present-tense enrollment**, ALWAYS use THREE filters:
+
 ```sql
-WHERE enrollment_status = 'Enrolled'    -- Active course enrollment
-  AND student_status = 'Active'         -- Active university student
-  AND is_current_semester = true        -- Current semester only
+WHERE student_enrollment_status = 'Enrolled'    -- Active in course
+  AND student_status = 'Active'                 -- Active at university
+  AND course_semester = 'Fall 2025'             -- Current semester
 ```
-This applies to ANY query asking about:
-- "currently enrolled students"
-- "current enrollment"
+
+**Triggers:**
+- "currently enrolled"
 - "students enrolled this semester"
 - "active students"
-- Present-tense enrollment questions
+- "how many students are enrolled" (present tense = current)
+- "courses by enrollment this semester"
+- "instructors by student enrollment this semester"
+- "top courses this semester"
+- "top instructors this semester"
+- ANY query that counts students in the current semester
 
-### Currently Enrolled Students
+**Common mistake:** Forgetting `student_status = 'Active'` when the query doesn't explicitly say "active students". Even when asking about "instructors by enrollment" or "courses by enrollment", you MUST include this filter to count only valid current enrollments.
+
+### Student Status vs Enrollment Status
+
+| User Says | SQL Filters Needed |
+|-----------|-------------------|
+| "currently enrolled students" | `student_status = 'Active'` AND `student_enrollment_status = 'Enrolled'` AND `course_semester = 'Fall 2025'` |
+| "all students" (context: enrollment) | Include all `student_status` values, but filter `student_enrollment_status` |
+| "students who dropped courses" | `student_enrollment_status = 'Dropped'` |
+| "students who completed courses" | `student_enrollment_status = 'Completed'` |
+
+**Available semesters:** Spring 2024, Fall 2024, Spring 2025, Fall 2025
+**Current semester:** Fall 2025
+
+### ⚠️ CRITICAL: Semester-to-Semester Comparisons
+
+When user asks to compare student behavior **"from Semester A to Semester B"**, you MUST:
+
+**Use INNER JOIN to compare only students present in BOTH semesters:**
+
 ```sql
-SELECT COUNT(DISTINCT student_id) as total_enrolled_students
-FROM student_enrollment_analytics
-WHERE enrollment_status = 'Enrolled'
-  AND student_status = 'Active'
-  AND is_current_semester = true
+WITH semester_a AS (
+  ...
+),
+semester_b AS (
+  ...
+)
+SELECT ...
+FROM semester_a a
+INNER JOIN semester_b b ON a.student_id = b.student_id  -- ✅ INNER JOIN
 ```
 
-### Over-Enrolled Courses
-```sql
-SELECT course_code, course_name, department_name,
-       instructor_first_name, instructor_last_name,
-       course_max_enrollment, current_enrollment_count, utilization_rate_pct
-FROM student_enrollment_analytics
-WHERE utilization_rate_pct >= 100 AND is_current_semester = true
-GROUP BY course_code, course_name, department_name,
-         instructor_first_name, instructor_last_name,
-         course_max_enrollment, current_enrollment_count, utilization_rate_pct
-ORDER BY utilization_rate_pct DESC
-```
+**❌ DO NOT use FULL OUTER JOIN for temporal comparisons:**
+- FULL OUTER JOIN includes students who only appear in one semester
+- Students who graduated after Semester A should NOT be counted as "decreased"
+- New students in Semester B should NOT be counted as "increased"
 
-### Enrollment by Department
-```sql
-SELECT department_name,
-       COUNT(DISTINCT student_id) as unique_students,
-       COUNT(DISTINCT course_id) as total_courses,
-       COUNT(*) as total_enrollments
-FROM student_enrollment_analytics
-WHERE enrollment_status = 'Enrolled' AND is_current_semester = true
-GROUP BY department_name
-ORDER BY total_enrollments DESC
-```
+**Query patterns that require INNER JOIN:**
+- "Students who increased/decreased course load from X to Y"
+- "Compare enrollment patterns between X and Y"
+- "Track student behavior from X to Y"
+- Any query using "from [semester] to [semester]"
 
-### Enrollment Trends Over Time
-```sql
-SELECT course_semester, enrollment_year, enrollment_quarter,
-       COUNT(DISTINCT student_id) as unique_students,
-       COUNT(*) as total_enrollments
-FROM student_enrollment_analytics
-WHERE enrollment_status = 'Enrolled'
-GROUP BY course_semester, enrollment_year, enrollment_quarter
-ORDER BY enrollment_year DESC, enrollment_quarter DESC
-```
+**Exception:** Use FULL OUTER JOIN only when explicitly asked to include:
+- "Students who graduated after ..."
+- "New enrollments in ..."
+- "All students in either semester"
 
-### Most Popular Courses
-```sql
-SELECT course_code, course_name, department_name,
-       COUNT(DISTINCT student_id) as enrollment_count,
-       AVG(utilization_rate_pct) as avg_utilization
-FROM student_enrollment_analytics
-WHERE enrollment_status = 'Enrolled' AND is_current_semester = true
-GROUP BY course_code, course_name, department_name
-ORDER BY enrollment_count DESC
-LIMIT 20
-```
+DO NOT use `student_status = 'Active'` for Semester-to-Semester Comparisons. Only use this filter when you are explicity asked to do so (when query says "active students")
 
-### Students by Major
-```sql
-SELECT student_major, COUNT(DISTINCT student_id) as student_count,
-       AVG(student_gpa) as avg_gpa, AVG(student_credits_completed) as avg_credits
-FROM student_enrollment_analytics
-WHERE student_status = 'Active'
-GROUP BY student_major
-ORDER BY student_count DESC
-```
+### Student-Focused Aggregation Patterns
 
-## Complex Scenarios
+| User Asks About | SQL Pattern |
+|-----------------|-------------|
+| "How many students..." | `COUNT(DISTINCT student_id)` - ALWAYS use DISTINCT |
+| "How many courses per student..." | `COUNT(DISTINCT course_id) ... GROUP BY student_id` |
+| "List students..." | `SELECT DISTINCT student_id, student_first_name, student_last_name, ...` |
+| "students by major" | `GROUP BY student_major` |
+| "students by GPA range" | `WHERE student_gpa BETWEEN x AND y` or `WHERE student_gpa > x` |
+| "students in department" | `WHERE student_department_name = 'Dept Name'` |
+| "students from X to Y" | Use INNER JOIN - see "Semester-to-Semester Comparisons" above |
 
-### Capacity Planning
-```sql
-SELECT course_code, course_name,
-       COUNT(*) as times_offered,
-       AVG(utilization_rate_pct) as avg_utilization,
-       MAX(current_enrollment_count) as peak_enrollment
-FROM student_enrollment_analytics
-WHERE enrollment_status = 'Enrolled'
-GROUP BY course_code, course_name
-HAVING AVG(utilization_rate_pct) >= 90
-ORDER BY avg_utilization DESC
-```
-Recommendation: If avg_utilization > 95%, consider adding sections
+## Data Quality Notes
 
-### Department Comparison
-```sql
-SELECT department_name,
-       COUNT(DISTINCT course_code) as courses_offered,
-       COUNT(DISTINCT student_id) as total_students,
-       AVG(utilization_rate_pct) as avg_utilization,
-       COUNT(DISTINCT instructor_id) as instructor_count
-FROM student_enrollment_analytics
-WHERE enrollment_status = 'Enrolled' AND is_current_semester = true
-GROUP BY department_name
-ORDER BY total_students DESC
-```
+- **Multiple rows per student**: Each row is one student-course enrollment
+- **Always use DISTINCT for student counts**: `COUNT(DISTINCT student_id)`
+- **Always use DISTINCT for course counts per student**: `COUNT(DISTINCT course_id)`
+- **Column naming**: Pay attention to prefixes (`student_*`, `course_*`, `course_instructor_*`)
+- **No pre-calculated fields**: Calculate counts, rates, and metrics in your SQL
+- **Student-level aggregates**: When aggregating student attributes (like GPA), consider using a CTE with DISTINCT student_id first
 
-### Enrollment Velocity
-```sql
-SELECT course_code, course_name,
-       AVG(days_since_enrollment) as avg_days_enrolled,
-       COUNT(*) as total_enrollments
-FROM student_enrollment_analytics
-WHERE enrollment_status = 'Enrolled' AND is_current_semester = true
-GROUP BY course_code, course_name
-ORDER BY avg_days_enrolled ASC
-```
-Insight: Low avg_days_enrolled indicates recent/late enrollments
+## Result Validation
 
-## Visualizations
-- Bar Chart: Enrollment by department or major
-- Line Chart: Enrollment trends over semesters
-- Scatter Plot: Utilization rate vs enrollment
-- Heatmap: Enrollment patterns by department and semester
+After generating SQL, verify:
+- [ ] Used `COUNT(DISTINCT student_id)` for student counts
+- [ ] Used `COUNT(DISTINCT course_id)` when counting courses per student
+- [ ] Filtered by `course_semester = 'Fall 2025'` for current data
+- [ ] Used correct column names with prefixes (`student_*`, `course_*`, etc.)
+- [ ] **CRITICAL:** Included all three filters for ANY query counting students in current semester:
+  - [ ] `student_enrollment_status = 'Enrolled'`
+  - [ ] `student_status = 'Active'`
+  - [ ] `course_semester = 'Fall 2025'`
+- [ ] **CRITICAL:** For semester-to-semester comparisons, used INNER JOIN (not FULL OUTER JOIN)
+- [ ] Used DISTINCT or CTE to avoid duplicate student rows when needed
+- [ ] Calculated metrics (not assuming pre-calculated columns exist)
