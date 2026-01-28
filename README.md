@@ -29,8 +29,7 @@ You will build a **Student Analytics AI Agent** that can query Amazon Athena to 
    source .venv/bin/activate
    pip install -e .
    ```
-3. Copy `.env.example` to `.env` and configure your settings
-4. Open `module-0-setup/0-environment-setup.ipynb` and follow along
+3. Open `module-0-setup/0-environment-setup.ipynb` and follow along
 
 ## Project Structure
 
