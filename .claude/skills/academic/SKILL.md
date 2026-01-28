@@ -6,12 +6,22 @@ description: Analyze student GPA and academic performance, grade distributions, 
 # Academic Performance Analytics
 
 ## Primary Table
-**student_academic_performance** - Metadata: `data/metadata/student_academic_performance.yaml`
+**student_academic_performance**
+- Metadata: `data/metadata/student_academic_performance.yaml`
+- Sample data: `data/metadata/student_academic_performance_sample_data.csv`
+
+**IMPORTANT**: Always read BOTH the YAML metadata file AND the CSV sample data file before writing queries. The sample data shows actual data format and example values.
 
 ## Related Tables
-- **course_performance_analytics** - Course metrics
-- **instructor_performance_summary** - Instructor metrics
-- **attendance_behavior_analytics** - Attendance impact
+- **course_performance_analytics**
+  - Metadata: `data/metadata/course_performance_analytics.yaml`
+  - Sample data: `data/metadata/course_performance_analytics_sample_data.csv`
+- **instructor_performance_summary**
+  - Metadata: `data/metadata/instructor_performance_summary.yaml`
+  - Sample data: `data/metadata/instructor_performance_summary_sample_data.csv`
+- **attendance_behavior_analytics**
+  - Metadata: `data/metadata/attendance_behavior_analytics.yaml`
+  - Sample data: `data/metadata/attendance_behavior_analytics_sample_data.csv`
 
 ## Pre-Calculated Metrics
 - GPAs: `student_overall_gpa`, `student_semester_gpa`, `student_cumulative_gpa`

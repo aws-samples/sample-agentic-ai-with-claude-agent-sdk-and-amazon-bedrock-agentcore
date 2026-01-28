@@ -90,7 +90,7 @@ def generate_base_data():
     # Courses
     courses = []
     course_types = ['Lecture', 'Lab', 'Seminar', 'Workshop', 'Online']
-    semesters = ['Fall 2024', 'Spring 2024', 'Fall 2023', 'Spring 2023']
+    semesters = ['Fall 2025', 'Spring 2025', 'Fall 2024', 'Spring 2024']
     for i in range(1, NUM_COURSES + 1):
         dept = random.choice(departments)
         instructor = random.choice([inst for inst in instructors if inst['department_id'] == dept['id']])
@@ -143,8 +143,26 @@ def generate_student_enrollment_analytics(students, courses, departments, instru
             'student_major': student['major'],
             'student_gpa': student['gpa'],
             'student_status': student['status'],
-            'student_enrollment_date': student['enrollment_date'],
-            'student_credits_completed': student['credits_completed'],
+            # 'student_enrollment_date': student['enrollment_date'],
+            # 'student_credits_completed': student['credits_completed'],
+
+            # Student department context (denormalized)
+            'student_department_id': dept['id'],
+            'student_department_name': dept['name'],
+            'student_dean_name': dept['dean'],
+            'student_building_name': dept['building'],
+
+            # Enrollment facts
+            'student_enrollment_id': enrollment_id,
+            'student_enrollment_date': enrollment_date,
+            'student_enrollment_status': random.choice(['Enrolled', 'Enrolled', 'Enrolled', 'Dropped', 'Completed']),
+            # 'current_enrollment_count': current_enrollment,
+            # 'utilization_rate_pct': utilization_rate,
+
+            # Time dimensions
+            'enrollment_year': enrollment_date.year,
+            'enrollment_month': enrollment_date.month,
+            'enrollment_quarter': (enrollment_date.month - 1) // 3 + 1,
 
             # Course context (denormalized)
             'course_id': course['id'],
@@ -156,32 +174,12 @@ def generate_student_enrollment_analytics(students, courses, departments, instru
             'course_max_enrollment': course['max_enrollment'],
             'course_room_number': course['room'],
 
-            # Department context (denormalized)
-            'department_id': dept['id'],
-            'department_name': dept['name'],
-            'dean_name': dept['dean'],
-            'building_name': dept['building'],
-
             # Instructor context (denormalized)
-            'instructor_id': instructor['id'],
-            'instructor_first_name': instructor['first_name'],
-            'instructor_last_name': instructor['last_name'],
-            'instructor_rank': instructor['rank'],
-            'instructor_email': instructor['email'],
-
-            # Enrollment facts
-            'enrollment_id': enrollment_id,
-            'enrollment_date': enrollment_date,
-            'enrollment_status': random.choice(['Enrolled', 'Enrolled', 'Enrolled', 'Dropped', 'Completed']),
-            'current_enrollment_count': current_enrollment,
-            'utilization_rate_pct': utilization_rate,
-
-            # Time dimensions
-            'enrollment_year': enrollment_date.year,
-            'enrollment_month': enrollment_date.month,
-            'enrollment_quarter': (enrollment_date.month - 1) // 3 + 1,
-            'is_current_semester': course['semester'] == 'Fall 2024',
-            'days_since_enrollment': (datetime.now().date() - enrollment_date).days
+            'course_instructor_id': instructor['id'],
+            'course_instructor_first_name': instructor['first_name'],
+            'course_instructor_last_name': instructor['last_name'],
+            'course_instructor_rank': instructor['rank'],
+            'course_instructor_email': instructor['email'],
         })
         enrollment_id += 1
 
@@ -312,26 +310,16 @@ def generate_financial_summary_by_student(students, departments):
             'student_enrollment_date': student['enrollment_date'],
 
             # Department context
-            'department_name': dept['name'],
-            'department_id': dept['id'],
+            'student_department_name': dept['name'],
+            'student_department_id': dept['id'],
 
             # Payment aggregations (pre-calculated)
-            'total_tuition_paid': total_tuition_paid,
             'total_tuition_due': total_tuition_paid + outstanding_balance,
+            'total_tuition_paid': total_tuition_paid,
             'outstanding_balance': outstanding_balance,
-            'total_payments_count': total_payments,
-            'completed_payments_count': completed_payments,
-            'pending_payments_count': pending_payments,
-            'failed_payments_count': failed_payments,
             'last_payment_date': fake.date_between(start_date='-1y', end_date='today'),
             'last_payment_amount': round(random.uniform(1000, 10000), 2),
             'last_payment_method': random.choice(['Credit Card', 'Bank Transfer', 'Check', 'Financial Aid']),
-
-            # Payment method breakdown
-            'credit_card_payments_total': round(total_tuition_paid * random.uniform(0.3, 0.6), 2),
-            'bank_transfer_total': round(total_tuition_paid * random.uniform(0.2, 0.4), 2),
-            'check_payments_total': round(total_tuition_paid * random.uniform(0.05, 0.15), 2),
-            'financial_aid_total': round(total_tuition_paid * random.uniform(0.1, 0.25), 2),
 
             # Scholarship aggregations (pre-calculated)
             'total_scholarships_received': total_scholarships,
@@ -340,28 +328,14 @@ def generate_financial_summary_by_student(students, departments):
             'need_based_scholarships_total': round(total_scholarships * random.uniform(0.2, 0.5), 2) if total_scholarships > 0 else 0,
             'athletic_scholarships_total': round(total_scholarships * random.uniform(0, 0.3), 2) if total_scholarships > 0 else 0,
             'departmental_scholarships_total': round(total_scholarships * random.uniform(0.1, 0.3), 2) if total_scholarships > 0 else 0,
-            'largest_scholarship_amount': round(total_scholarships * random.uniform(0.5, 1.0), 2) if total_scholarships > 0 else 0,
-            'latest_scholarship_date': fake.date_between(start_date='-1y', end_date='today') if total_scholarships > 0 else None,
 
             # Financial metrics (pre-calculated)
             'net_tuition_after_scholarships': total_tuition_paid - total_scholarships,
             'scholarship_coverage_rate_pct': round((total_scholarships / (total_tuition_paid + 0.01)) * 100, 2),
-            'payment_success_rate_pct': round((completed_payments / total_payments) * 100, 2),
-            'avg_payment_amount': round(total_tuition_paid / max(completed_payments, 1), 2),
-
-            # Semester breakdown
-            'fall_2024_tuition': round(total_tuition_paid * 0.25, 2),
-            'fall_2024_scholarships': round(total_scholarships * 0.25, 2),
-            'spring_2024_tuition': round(total_tuition_paid * 0.25, 2),
-            'spring_2024_scholarships': round(total_scholarships * 0.25, 2),
-            'fall_2023_tuition': round(total_tuition_paid * 0.25, 2),
-            'fall_2023_scholarships': round(total_scholarships * 0.25, 2),
 
             # Flags
             'has_outstanding_balance': outstanding_balance > 0,
-            'is_scholarship_recipient': total_scholarships > 0,
-            'is_payment_plan_active': pending_payments > 0,
-            'is_financial_aid_recipient': total_scholarships > 5000
+            'is_scholarship_recipient': total_scholarships > 0
         })
 
     with open(OUTPUT_DIR / 'financial_summary_by_student.csv', 'w', newline='') as f:
@@ -681,9 +655,9 @@ def generate_department_summary_metrics(departments, students, instructors, cour
             'retention_rate_pct': round(random.uniform(80, 95), 2),
 
             # Semester comparisons
-            'fall_2024_enrollment': int(total_students * 0.55),
-            'spring_2024_enrollment': int(total_students * 0.45),
-            'fall_2023_enrollment': int(total_students * 0.52),
+            'fall_2025_enrollment': int(total_students * 0.55),
+            'spring_2025_enrollment': int(total_students * 0.45),
+            'fall_2024_enrollment': int(total_students * 0.52),
             'enrollment_trend': random.choice(['Growing', 'Stable', 'Declining']),
 
             # Rankings (pre-calculated)
