@@ -227,7 +227,7 @@ class AthenaQueryExecutor:
         Returns:
             Dictionary with execution details and local file path
         """
-        self.print_sql_box(query)
+        # self.print_sql_box(query)
 
         # Execute query
         exec_result = self.execute_query(query)
