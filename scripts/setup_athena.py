@@ -629,7 +629,6 @@ def setup_athena(
 
     if not data_path.exists():
         print(f"Error: Data directory not found: {data_path}")
-        print("Please run generate_denormalized_data.py first to create the CSV files.")
         return False
 
     print("=" * 80)
