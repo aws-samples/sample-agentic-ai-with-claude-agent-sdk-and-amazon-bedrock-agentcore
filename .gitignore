@@ -42,3 +42,7 @@ uv.lock
 
 # Jupyter
 .ipynb_checkpoints
+
+# Project specific
+results/*
+*/results/*
