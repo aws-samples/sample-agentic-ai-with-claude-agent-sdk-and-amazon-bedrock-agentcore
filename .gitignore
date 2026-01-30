@@ -46,3 +46,7 @@ uv.lock
 # Project specific
 results/*
 */results/*
+temp/*
+Dockerfile
+.bedrock_agentcore.yaml
+dev_server.log
