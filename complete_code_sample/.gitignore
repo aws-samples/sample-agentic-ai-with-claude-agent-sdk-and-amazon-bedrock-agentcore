@@ -1,0 +1,75 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# uv
+uv.lock
+.python-version
+
+# Environment files
+.env
+.env.local
+*.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Jupyter
+.ipynb_checkpoints
+
+# Results
+results/raw/*.csv
+results/raw/*.sql
+results/processed/*
+!results/raw/.gitkeep
+!results/processed/.gitkeep
+
+# AgentCore
+.bedrock_agentcore/
+.bedrock_agentcore.yaml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# AWS
+.aws/
+credentials
+config
+
+
+# Project specific
+.claude/settings.local.json
+agentcore/agentcore-*
+results/raw/*
+results/processed/*
+temp/*
