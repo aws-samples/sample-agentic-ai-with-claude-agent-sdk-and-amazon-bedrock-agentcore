@@ -133,13 +133,15 @@ def create_agent_span_attributes(session_id: str, request_id: str, user_query: s
     Create GenAI semantic convention attributes for agent spans.
 
     Reference: https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-agent-spans/
-    Uses strands-agents format for CloudWatch GenAI Observability compatibility.
+    Uses both gen_ai.system and gen_ai.provider.name for CloudWatch compatibility.
     """
     return {
-        # Required GenAI semantic convention attributes
+        # Required GenAI semantic convention attributes (both needed for CloudWatch)
         "gen_ai.operation.name": "invoke_agent",
-        "gen_ai.system": "strands-agents",  # Use strands-agents for CloudWatch compatibility
+        "gen_ai.system": "aws.bedrock",  # Required for CloudWatch GenAI Observability
+        "gen_ai.provider.name": "aws.bedrock",  # Required by GenAI semconv spec
         "gen_ai.agent.name": AGENT_NAME,
+        "gen_ai.agent.id": AGENT_NAME,  # Agent identifier
 
         # Session tracking (required for CloudWatch correlation)
         "session.id": session_id,
@@ -162,12 +164,50 @@ def create_agent_span_attributes(session_id: str, request_id: str, user_query: s
 def create_tool_span_attributes(tool_name: str, sequence: int, session_id: str) -> dict:
     """Create GenAI semantic convention attributes for tool spans."""
     return {
+        # Required GenAI semantic convention attributes (needed for CloudWatch recognition)
         "gen_ai.operation.name": "execute_tool",
+        "gen_ai.system": "aws.bedrock",  # Required for CloudWatch GenAI Observability
+        "gen_ai.provider.name": "aws.bedrock",  # Required by GenAI semconv spec
         "gen_ai.tool.name": tool_name,
         "tool.name": tool_name,
         "tool.sequence": sequence,
         "session.id": session_id,
     }
+
+
+def get_agentcore_session_id() -> tuple[str, bool]:
+    """
+    Get session ID from AgentCore runtime.
+
+    AgentCore propagates session ID via:
+    1. OTEL baggage (when ADOT is configured)
+    2. HTTP header X-Amzn-Bedrock-AgentCore-Runtime-Session-Id
+    3. Environment variable (fallback)
+
+    Returns:
+        Tuple of (session_id, from_baggage) where from_baggage indicates
+        if the session ID was obtained from OTEL baggage (should not override).
+    """
+    # Try to get from OTEL baggage first (ADOT propagates it here)
+    if OTEL_AVAILABLE:
+        try:
+            session_from_baggage = baggage.get_baggage("session.id")
+            if session_from_baggage:
+                logger.info(f"[Observability] Got session ID from baggage: {session_from_baggage}")
+                return session_from_baggage, True  # Don't override baggage
+        except Exception as e:
+            logger.debug(f"Could not get session ID from baggage: {e}")
+
+    # Try environment variable (AgentCore may set this)
+    env_session = os.getenv("BEDROCK_AGENTCORE_SESSION_ID")
+    if env_session:
+        logger.info(f"[Observability] Got session ID from env: {env_session}")
+        return env_session, False  # Can set in baggage
+
+    # Generate fallback (should rarely happen in AgentCore)
+    fallback_session = str(uuid.uuid4())
+    logger.warning(f"[Observability] Generated fallback session ID: {fallback_session}")
+    return fallback_session, False  # Need to set in baggage
 
 
 @app.entrypoint
@@ -180,8 +220,8 @@ async def main(payload: dict = None):
     request_id = str(uuid.uuid4())
     start_time = time.time()
 
-    # Get session ID from AgentCore runtime or generate one
-    session_id = os.getenv("BEDROCK_AGENTCORE_SESSION_ID", str(uuid.uuid4()))
+    # Get session ID from AgentCore runtime (from baggage, env, or generate)
+    session_id, session_from_baggage = get_agentcore_session_id()
 
     # Extract user query from payload
     if payload is None or "query" not in payload:
@@ -205,9 +245,11 @@ async def main(payload: dict = None):
             AGENT_VERSION
         )
 
-        # Set session ID in baggage for downstream propagation
-        ctx = baggage.set_baggage("session.id", session_id)
-        ctx_token = context.attach(ctx)
+        # Only set session ID in baggage if it wasn't already there (avoid overriding ADOT's propagation)
+        if not session_from_baggage:
+            ctx = baggage.set_baggage("session.id", session_id)
+            ctx_token = context.attach(ctx)
+            logger.info(f"[Observability] Set session ID in baggage: {session_id}")
 
         parent_span = trace.get_current_span()
         parent_context = parent_span.get_span_context() if parent_span else None
@@ -345,6 +387,9 @@ IMPORTANT: This request has ID: {request_id}
 
                 logger.info(f"[Observability] Created invoke_agent span")
 
+                # Create parent context once for all child spans (critical for async context propagation)
+                agent_span_context = trace.set_span_in_context(agent_span)
+
                 async with ClaudeSDKClient(options=options) as client:
                     await client.query(user_query)
 
@@ -352,7 +397,8 @@ IMPORTANT: This request has ID: {request_id}
                         result = await process_message_with_observability(
                             message, tracer, agent_span, session_id,
                             tool_calls, skills_loaded, response_text,
-                            input_tokens, output_tokens
+                            input_tokens, output_tokens,
+                            parent_context=agent_span_context
                         )
 
                         if result.get("yield_content"):
@@ -370,8 +416,10 @@ IMPORTANT: This request has ID: {request_id}
                             cost = metrics["cost"]
                             turns = metrics["turns"]
 
-                            # Set completion metrics with GenAI semantic conventions
+                            # Set completion metrics with GenAI semantic conventions (CloudWatch requires both naming conventions)
+                            agent_span.set_attribute("gen_ai.usage.prompt_tokens", input_tokens)
                             agent_span.set_attribute("gen_ai.usage.input_tokens", input_tokens)
+                            agent_span.set_attribute("gen_ai.usage.completion_tokens", output_tokens)
                             agent_span.set_attribute("gen_ai.usage.output_tokens", output_tokens)
                             agent_span.set_attribute("gen_ai.usage.total_tokens", input_tokens + output_tokens)
                             agent_span.set_attribute("agent.cost_usd", cost)
@@ -380,15 +428,10 @@ IMPORTANT: This request has ID: {request_id}
                             agent_span.set_attribute("agent.tool_calls_count", len(tool_calls))
                             agent_span.set_attribute("agent.skills_loaded", json.dumps(skills_loaded))
 
-                            # Add completion event
-                            agent_span.add_event("gen_ai.agent.finish", {
-                                "gen_ai.event.name": "agent_finish",
-                                "session.id": session_id,
-                                "success": True,
-                                "duration_ms": duration_ms,
-                                "cost_usd": cost,
-                                "num_turns": turns,
-                                "tool_calls_count": len(tool_calls)
+                            # Add completion event with GenAI semantic convention (gen_ai.choice is the standard)
+                            agent_span.add_event("gen_ai.choice", {
+                                "message": response_text[:1000] if len(response_text) > 1000 else response_text,
+                                "finish_reason": "end_turn"
                             })
 
                             agent_span.set_status(Status(StatusCode.OK))
@@ -465,7 +508,8 @@ IMPORTANT: This request has ID: {request_id}
 async def process_message_with_observability(
     message, tracer, parent_span, session_id,
     tool_calls, skills_loaded, response_text,
-    input_tokens, output_tokens
+    input_tokens, output_tokens,
+    parent_context=None
 ):
     """Process agent message with GenAI semantic convention observability."""
     result = {
@@ -478,6 +522,10 @@ async def process_message_with_observability(
         "output_tokens": output_tokens
     }
 
+    # Use parent context for creating child spans (critical for async context propagation)
+    if parent_context is None:
+        parent_context = trace.set_span_in_context(parent_span)
+
     if hasattr(message, 'subtype'):
         if message.subtype == 'init':
             logger.info("[SYSTEM] Agent initialized")
@@ -486,9 +534,10 @@ async def process_message_with_observability(
             cost = getattr(message, 'total_cost_usd', 0)
             turns = getattr(message, 'num_turns', 0)
 
-            # Extract token counts if available
-            result["input_tokens"] = getattr(message, 'input_tokens', input_tokens)
-            result["output_tokens"] = getattr(message, 'output_tokens', output_tokens)
+            # Extract token counts from usage dict (Claude Agent SDK stores tokens here)
+            usage_data = getattr(message, 'usage', None) or {}
+            result["input_tokens"] = usage_data.get('input_tokens', 0) or usage_data.get('inputTokens', 0)
+            result["output_tokens"] = usage_data.get('output_tokens', 0) or usage_data.get('outputTokens', 0)
 
             logger.info(f"Analysis Complete - Duration: {duration_ms/1000:.1f}s | Cost: ${cost:.4f} | Turns: {turns}")
             result["completion_metrics"] = {
@@ -521,10 +570,11 @@ async def process_message_with_observability(
                 result["tool_calls"].append(tool_name)
                 logger.info(f"[TOOL USE] {tool_name}")
 
-                # Create tool span with GenAI semantic conventions
+                # Create tool span with explicit parent context (critical for async context propagation)
                 with tracer.start_as_current_span(
                     f"execute_tool {tool_name}",
-                    kind=SpanKind.INTERNAL
+                    kind=SpanKind.INTERNAL,
+                    context=parent_context
                 ) as tool_span:
 
                     tool_attrs = create_tool_span_attributes(
@@ -533,14 +583,21 @@ async def process_message_with_observability(
                     for key, value in tool_attrs.items():
                         tool_span.set_attribute(key, value)
 
+                    # Get tool use ID if available
+                    tool_use_id = getattr(block, 'id', '') or str(uuid.uuid4())[:8]
+                    tool_span.set_attribute("gen_ai.tool.call.id", tool_use_id)
+
+                    # Add input event with GenAI semantic convention
+                    tool_span.add_event("gen_ai.tool.message", {
+                        "role": "tool",
+                        "content": json.dumps(block.input)[:500],
+                        "id": tool_use_id
+                    })
+
                     if tool_name == "Skill":
                         skill_name = block.input.get('skill', 'unknown')
                         result["skills_loaded"].append(skill_name)
                         tool_span.set_attribute("skill.name", skill_name)
-                        tool_span.add_event("skill_loaded", {
-                            "skill": skill_name,
-                            "session.id": session_id
-                        })
                         result["yield_content"] = f"\n🎯 Loading skill: {skill_name}\n"
 
                     elif tool_name == "mcp__athena__execute_athena_query":
@@ -549,10 +606,6 @@ async def process_message_with_observability(
                         tool_span.set_attribute("db.statement", query_sql[:500])
                         tool_span.set_attribute("db.system", "athena")
                         tool_span.set_attribute("athena.output_file", filename)
-                        tool_span.add_event("sql_query_submitted", {
-                            "sql_preview": query_sql[:200],
-                            "session.id": session_id
-                        })
 
                         sql_output = f"\ninvoking tool: {tool_name}\n"
                         if query_sql:
@@ -567,6 +620,11 @@ async def process_message_with_observability(
                         file_path = block.input.get('file_path', '')
                         tool_span.set_attribute("file.path", file_path)
 
+                    # Add output event with GenAI semantic convention
+                    tool_span.add_event("gen_ai.choice", {
+                        "message": "tool_invoked",
+                        "id": tool_use_id
+                    })
                     tool_span.set_status(Status(StatusCode.OK))
 
             elif hasattr(block, 'tool_use_id') and hasattr(block, 'content'):

@@ -309,19 +309,24 @@ IMPORTANT: This request has ID: {request_id}
                         cost = getattr(message, 'total_cost_usd', 0)
                         turns = getattr(message, 'num_turns', 0)
 
-                        # Extract token counts if available
-                        input_tokens = getattr(message, 'input_tokens', input_tokens)
-                        output_tokens = getattr(message, 'output_tokens', output_tokens)
+                        # Extract token counts from usage dict (Claude Agent SDK stores tokens here)
+                        usage_data = getattr(message, 'usage', None) or {}
+                        input_tokens = usage_data.get('input_tokens', 0) or usage_data.get('inputTokens', 0)
+                        output_tokens = usage_data.get('output_tokens', 0) or usage_data.get('outputTokens', 0)
 
                         print("\n" + "=" * 80)
                         print("Analysis Complete")
                         print(f"Duration: {duration_s:.1f}s | Cost: ${cost:.4f} | Turns: {turns}")
+                        print(f"Tokens: input={input_tokens}, output={output_tokens}")
+                        print(f"Tool calls: {len(tool_calls)} ({', '.join(set(tool_calls))})")
                         print("=" * 80)
 
                         # Set completion metrics with GenAI semantic conventions
                         if session_span:
-                            # GenAI semantic convention token attributes
+                            # GenAI semantic convention token attributes (CloudWatch requires both naming conventions)
+                            session_span.set_attribute("gen_ai.usage.prompt_tokens", input_tokens)
                             session_span.set_attribute("gen_ai.usage.input_tokens", input_tokens)
+                            session_span.set_attribute("gen_ai.usage.completion_tokens", output_tokens)
                             session_span.set_attribute("gen_ai.usage.output_tokens", output_tokens)
                             session_span.set_attribute("gen_ai.usage.total_tokens", input_tokens + output_tokens)
 
@@ -334,15 +339,10 @@ IMPORTANT: This request has ID: {request_id}
                             session_span.set_attribute("agent.skills_loaded", json.dumps(skills_loaded))
                             session_span.set_attribute("agent.tools_used", json.dumps(list(set(tool_calls))))
 
-                            # Add completion event with GenAI semantic convention
-                            session_span.add_event("gen_ai.agent.finish", {
-                                "gen_ai.event.name": "agent_finish",
-                                "session.id": session_id,
-                                "success": True,
-                                "duration_ms": duration_ms,
-                                "cost_usd": cost,
-                                "num_turns": turns,
-                                "tool_calls_count": len(tool_calls)
+                            # Add completion event with GenAI semantic convention (gen_ai.choice is the standard)
+                            session_span.add_event("gen_ai.choice", {
+                                "message": response_text[:1000] if len(response_text) > 1000 else response_text,
+                                "finish_reason": "end_turn"
                             })
                             session_span.set_status(Status(StatusCode.OK))
                         continue
@@ -387,14 +387,21 @@ IMPORTANT: This request has ID: {request_id}
                                     for key, value in tool_attrs.items():
                                         tool_span.set_attribute(key, value)
 
+                                    # Get tool use ID if available
+                                    tool_use_id = getattr(content, 'id', '') or str(uuid.uuid4())[:8]
+                                    tool_span.set_attribute("gen_ai.tool.call.id", tool_use_id)
+
+                                    # Add input event with GenAI semantic convention
+                                    tool_span.add_event("gen_ai.tool.message", {
+                                        "role": "tool",
+                                        "content": json.dumps(content.input)[:500],
+                                        "id": tool_use_id
+                                    })
+
                                     if tool_name == "Skill":
                                         skill_name = content.input.get('skill', 'unknown')
                                         skills_loaded.append(skill_name)
                                         tool_span.set_attribute("skill.name", skill_name)
-                                        tool_span.add_event("skill_loaded", {
-                                            "skill": skill_name,
-                                            "session.id": session_id
-                                        })
                                         print(f"\n[Loading skill: {skill_name}]")
 
                                     elif tool_name == "Read":
@@ -409,10 +416,6 @@ IMPORTANT: This request has ID: {request_id}
                                         tool_span.set_attribute("db.statement", query_sql[:500])
                                         tool_span.set_attribute("db.system", "athena")
                                         tool_span.set_attribute("athena.output_file", filename)
-                                        tool_span.add_event("sql_query_submitted", {
-                                            "sql_preview": query_sql[:200],
-                                            "session.id": session_id
-                                        })
                                         print(f"\ninvoking tool: {tool_name}")
                                         print_sql_box(query_sql)
                                         print(f"\nSaving to: {filename}")
@@ -425,6 +428,11 @@ IMPORTANT: This request has ID: {request_id}
                                     elif debug_mode:
                                         print(f"\n[Tool: {tool_name}]")
 
+                                    # Add output event with GenAI semantic convention
+                                    tool_span.add_event("gen_ai.choice", {
+                                        "message": "tool_invoked",
+                                        "id": tool_use_id
+                                    })
                                     tool_span.set_status(Status(StatusCode.OK))
                             else:
                                 # No observability - original behavior
