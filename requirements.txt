@@ -26,8 +26,8 @@ faker==40.1.2
 
 # Observability (OpenTelemetry for AgentCore)
 aws-opentelemetry-distro==0.14.2
-opentelemetry-api==1.39.1
-opentelemetry-sdk==1.39.1
+opentelemetry-api==1.33.1
+opentelemetry-sdk==1.33.1
 
 # GenAI instrumentation for Bedrock (provides proper semantic conventions)
 openinference-instrumentation-bedrock==0.1.32

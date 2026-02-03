@@ -3,7 +3,7 @@ name = "claude-agentcore-workshop"
 version = "0.1.0"
 description = "Workshop: Build Agentic AI Applications with Claude Agent SDK and Amazon Bedrock AgentCore"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
     {name = "AWS Workshop"}
@@ -26,8 +26,8 @@ dependencies = [
     "jupyter==1.1.1",
     "ipykernel==7.1.0",
     "aws-opentelemetry-distro==0.14.2",
-    "opentelemetry-api==1.39.1",
-    "opentelemetry-sdk==1.39.1",
+    "opentelemetry-api==1.33.1",
+    "opentelemetry-sdk==1.33.1",
     "openinference-instrumentation-bedrock==0.1.32",
     "openinference-semantic-conventions==0.1.26"
 ]
@@ -48,8 +48,8 @@ packages = ["agent", "tools"]
 
 [tool.black]
 line-length = 100
-target-version = ['py310']
+target-version = ['py311']
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py311"
