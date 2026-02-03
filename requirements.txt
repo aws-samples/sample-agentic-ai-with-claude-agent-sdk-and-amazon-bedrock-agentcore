@@ -1,34 +1,34 @@
 # Claude Agent SDK and dependencies
-claude-agent-sdk==0.1.19
-anyio>=3.7.0
+claude-agent-sdk==0.1.27
+anyio==4.12.1
 
 # Environment variables
-python-dotenv>=1.0.0
+python-dotenv==1.2.1
 
 # Amazon Bedrock AgentCore (for deployment)
 bedrock-agentcore==1.1.4
-bedrock-agentcore-starter-toolkit  # CLI tool for AgentCore deployment
+bedrock-agentcore-starter-toolkit==0.2.9  # CLI tool for AgentCore deployment
 
 # AWS SDK
-boto3>=1.34.0
+boto3==1.42.40
 
 # SQL parsing for query validation
-sqlparse>=0.4.0
+sqlparse==0.5.5
 
 # Data processing and visualization
-pandas>=2.0.0
-numpy>=1.24.0
-matplotlib>=3.7.0
-seaborn>=0.12.0
+pandas==3.0.0
+numpy==2.4.2
+matplotlib==3.10.8
+seaborn==0.13.2
 
 # Demo data generation
-faker>=24.0.0
+faker==40.1.2
 
 # Observability (OpenTelemetry for AgentCore)
-aws-opentelemetry-distro~=0.12.1
-opentelemetry-api
-opentelemetry-sdk
+aws-opentelemetry-distro==0.14.2
+opentelemetry-api==1.39.1
+opentelemetry-sdk==1.39.1
 
 # GenAI instrumentation for Bedrock (provides proper semantic conventions)
-openinference-instrumentation-bedrock>=0.1.0
-openinference-semantic-conventions>=0.1.0
+openinference-instrumentation-bedrock==0.1.32
+openinference-semantic-conventions==0.1.26
