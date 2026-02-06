@@ -100,16 +100,8 @@ execute_athena_query(
 
 Denormalized analytics tables (no joins unless absolutely necessary):
 
-1. **student_enrollment_analytics** - Enrollment, course capacity, utilization
-2. **student_academic_performance** - Grades, GPA, academic standing
-3. **financial_summary_by_student** - Tuition, payments, scholarships
-4. **course_performance_analytics** - Course difficulty, instructor effectiveness
-5. **instructor_performance_summary** - Instructor workload, ratings
-6. **department_summary_metrics** - Department-level aggregates
-7. **student_activity_engagement** - Extracurricular activities
-8. **attendance_behavior_analytics** - Attendance patterns
-9. **scholarship_recipient_analysis** - Scholarship effectiveness
-10. **library_usage_patterns** - Library resource utilization
+- **student_enrollment_analytics** - Enrollment, course capacity, utilization
+- **financial_summary_by_student** - Tuition, payments, scholarships
 
 ## Skills
 
