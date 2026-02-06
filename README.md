@@ -4,6 +4,9 @@ This workshop guides you through building, deploying, and operating AI agents us
 
 You can find this workshop at [here](https://studio.us-east-1.prod.workshops.aws/preview/2ab3895e-8b7c-4f5c-b0c7-8597d6954290/builds/6844551f-d3d7-4862-9963-9871924be673
 )
+
+Note: The code sample used in this workshop is for tutoria purpose only and should not be used in the production evironment.
+
 ## Workshop Overview
 
 You will build a **Student Analytics AI Agent** that can query Amazon Athena to analyze student management data through natural language. The workshop demonstrates:
