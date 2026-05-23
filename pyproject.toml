@@ -29,7 +29,8 @@ dependencies = [
     "opentelemetry-api==1.33.1",
     "opentelemetry-sdk==1.33.1",
     "openinference-instrumentation-bedrock==0.1.32",
-    "openinference-semantic-conventions==0.1.26"
+    "openinference-semantic-conventions==0.1.26",
+    "openinference-instrumentation==0.1.48"
 ]
 
 [project.optional-dependencies]
