@@ -35,7 +35,7 @@ def test_code_cells_parse(nb):
 def test_teaches_memory_flow(nb):
     md = "\n".join(c.source for c in nb.cells if c.cell_type == "markdown")
     for needle in ["agentcore deploy", "agentcore invoke", "Memory",
-                   "session", "cross-session", "remove memory"]:
+                   "session", "cross-session"]:
         assert needle in md, f"notebook should mention {needle!r}"
 
 

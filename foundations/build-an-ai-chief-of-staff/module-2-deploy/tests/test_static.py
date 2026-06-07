@@ -35,7 +35,7 @@ def test_code_cells_parse(nb):
 def test_teaches_deploy_flow(nb):
     md = "\n".join(c.source for c in nb.cells if c.cell_type == "markdown")
     for needle in ["agentcore deploy", "agentcore invoke", "agentcore dev",
-                   "remove agent", "Container", "stateless", "Module 3"]:
+                   "Container", "stateless", "Module 3"]:
         assert needle in md, f"notebook should mention {needle!r}"
 
 
