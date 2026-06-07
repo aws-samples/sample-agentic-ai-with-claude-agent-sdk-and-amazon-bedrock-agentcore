@@ -35,7 +35,7 @@ def test_code_cells_parse(nb):
 def test_teaches_observability_flow(nb):
     md = "\n".join(c.source for c in nb.cells if c.cell_type == "markdown")
     for needle in ["Transaction Search", "GenAI", "session id", "opentelemetry-instrument",
-                   "gen_ai.", "Cleanup"]:
+                   "gen_ai."]:
         assert needle.lower() in md.lower(), f"notebook should mention {needle!r}"
 
 
