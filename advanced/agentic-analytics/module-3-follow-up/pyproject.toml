@@ -1,0 +1,33 @@
+[project]
+name = "agentic-analytics-module-3-follow-up"
+version = "0.1.0"
+description = "Agentic Analytics Module 3 — follow-up questions (clarification + session resume)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "claude-agent-sdk==0.2.88",
+    "bedrock-agentcore==1.13.0",
+    "boto3==1.43.21",
+    "sqlparse==0.5.5",
+    "pandas==2.3.3",
+    "matplotlib==3.10.8",
+    "aws-opentelemetry-distro==0.17.1",
+    "python-dotenv==1.2.2",
+    "ipykernel==7.2.0",
+]
+
+[dependency-groups]
+test = [
+    "pytest==9.0.3",
+    "nbclient==0.10.4",
+    "nbconvert==7.17.1",
+    "nbformat==5.10.4",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests", "analytics_agent"]
+markers = [
+    "slow: real deploy + multi-round clarification invoke (needs creds; minutes + cost)",
+]
+addopts = "-m 'not slow'"

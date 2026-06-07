@@ -1,0 +1,33 @@
+[project]
+name = "agentic-analytics-module-2-deploy"
+version = "0.1.0"
+description = "Agentic Analytics Module 2 — deploy the agent to AgentCore Runtime + observability"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "claude-agent-sdk==0.2.88",           # same agent runtime as Module 1
+    "bedrock-agentcore==1.13.0",          # BedrockAgentCoreApp + @app.entrypoint
+    "boto3==1.43.21",                     # Athena/S3 + invoke + traces peek
+    "sqlparse==0.5.5",
+    "pandas==2.3.3",
+    "matplotlib==3.10.8",
+    "aws-opentelemetry-distro==0.17.1",   # ADOT (also pulled into the container)
+    "python-dotenv==1.2.2",
+    "ipykernel==7.2.0",
+]
+
+[dependency-groups]
+test = [
+    "pytest==9.0.3",
+    "nbclient==0.10.4",
+    "nbconvert==7.17.1",
+    "nbformat==5.10.4",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests", "analytics_agent"]
+markers = [
+    "slow: real agentcore create/deploy/invoke round-trip (needs creds + IAM; minutes + cost)",
+]
+addopts = "-m 'not slow'"

@@ -1,0 +1,20 @@
+# Secrets (local environment files are never committed)
+.env.local
+
+# Deployment target carries a real AWS account ID — keep it local.
+# Participants generate aws-targets.json from aws-targets.example.json (see the notebook).
+aws-targets.json
+
+# CDK Build Artifacts
+cdk/cdk.out/
+cdk/node_modules/
+
+# CLI Internals — includes deployed-state.json, which records the deployed
+# runtime/memory/IAM-role ARNs and the real 12-digit AWS account id. That is
+# environment-specific and must NOT be committed. The CDK handles its absence
+# (bin/cdk.ts: "Deployed state may not exist on first deploy"), so dropping it
+# from git does not break deploy.
+.cli/*
+
+# Ephemeral Staging
+.cache/*

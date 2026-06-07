@@ -1,0 +1,31 @@
+[project]
+name = "agentic-analytics-module-1-local-agent"
+version = "0.1.0"
+description = "Agentic Analytics Module 1 — local text-to-SQL agent (Claude Agent SDK + Athena)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "claude-agent-sdk==0.2.88",   # the agent runtime (same pin as Phase 1)
+    "boto3==1.43.21",             # Athena + S3 (via tools/athena_tools.py)
+    "sqlparse==0.5.5",            # SQL validation (SELECT-only guard)
+    "pandas==2.3.3",              # the agent analyzes downloaded CSVs
+    "matplotlib==3.10.8",         # ...and charts them
+    "python-dotenv==1.2.2",
+    "ipykernel==7.2.0",           # notebook kernel
+]
+
+[dependency-groups]
+test = [
+    "pytest==9.0.3",
+    "nbclient==0.10.4",
+    "nbconvert==7.17.1",
+    "nbformat==5.10.4",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests", "analytics_agent"]
+markers = [
+    "slow: runs the agent against Bedrock + Athena (needs creds; minutes + cost)",
+]
+addopts = "-m 'not slow'"

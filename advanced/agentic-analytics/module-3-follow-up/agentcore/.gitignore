@@ -1,0 +1,15 @@
+# Secrets (local environment files are never committed)
+.env.local
+
+# CDK Build Artifacts
+cdk/cdk.out/
+cdk/node_modules/
+
+# CLI Internals (deployed-state.json captures a real account id + ARNs — keep it local)
+.cli/*
+
+# Ephemeral Staging
+.cache/*
+
+# Deployment target carries a real 12-digit account id — commit only the .example
+aws-targets.json

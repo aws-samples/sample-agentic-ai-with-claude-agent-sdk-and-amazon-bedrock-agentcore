@@ -1,0 +1,28 @@
+[project]
+name = "module-1-local-agent"
+version = "0.1.0"
+description = "Workshop Module 1 — Build a Local Agent (Chief of Staff) with Claude Agent SDK on Amazon Bedrock"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "claude-agent-sdk==0.2.88",   # pinned; uses output-styles / plan-mode / project settings
+    "python-dotenv==1.2.2",
+    "ipykernel==7.2.0",           # Jupyter kernel for the notebook
+    "boto3==1.43.21",             # optional Bedrock access / credential check in the setup cell
+]
+
+[dependency-groups]
+test = [
+    "pytest==9.0.3",
+    "nbclient==0.10.4",   # programmatic notebook execution
+    "nbconvert==7.17.1",
+    "nbformat==5.10.4",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests"]            # makes `from conftest import ...` work in test modules
+markers = [
+    "slow: executes the real notebook against Amazon Bedrock (needs AWS credentials; minutes + tokens)",
+]
+addopts = "-m 'not slow'"         # bare `pytest` runs only the fast tier; use `-m slow` for the live run

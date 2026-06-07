@@ -1,0 +1,8 @@
+[
+  {
+    "name": "default",
+    "description": "Workshop deployment target — copy to aws-targets.json and fill in YOUR account/region.",
+    "account": "111122223333",
+    "region": "us-west-2"
+  }
+]
