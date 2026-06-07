@@ -1,0 +1,27 @@
+[project]
+name = "agentic-analytics-module-0-setup"
+version = "0.1.0"
+description = "Agentic Analytics Module 0 — one-shot infrastructure setup (S3 + Athena data layer)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "boto3==1.43.21",         # S3 + Athena + STS
+    "ipykernel==7.2.0",       # notebook kernel
+    "python-dotenv==1.2.2",
+]
+
+[dependency-groups]
+test = [
+    "pytest==9.0.3",
+    "nbclient==0.10.4",
+    "nbconvert==7.17.1",
+    "nbformat==5.10.4",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests", "scripts"]
+markers = [
+    "slow: creates/queries real AWS infra (S3 + Athena); needs creds",
+]
+addopts = "-m 'not slow'"

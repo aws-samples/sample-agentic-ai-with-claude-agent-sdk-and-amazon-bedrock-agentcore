@@ -14,8 +14,10 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+# Anchor to repo root so this Python-packaging rule does NOT swallow the CDK
+# source dir agentcore/cdk/lib/ (which holds the hand-edited cdk-stack.ts).
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -26,7 +28,8 @@ wheels/
 
 # uv
 uv.lock
-.python-version
+# NOTE: .python-version is intentionally NOT ignored — each module commits one to
+# pin the local dev interpreter (3.11.14) so every participant's .venv matches.
 
 # Environment files
 .env
@@ -43,10 +46,16 @@ uv.lock
 # Jupyter
 .ipynb_checkpoints
 
+# pytest
+.pytest_cache/
+
 # Project specific
 results/*
 */results/*
+**/results/
 temp/*
-Dockerfile
+# NOTE: the per-module bundle Dockerfile is intentionally NOT ignored — it is the
+# only thing that sets the deployed Python (the FROM image), so it must be committed
+# for the deploy to be reproducible from a clean clone.
 .bedrock_agentcore.yaml
 dev_server.log

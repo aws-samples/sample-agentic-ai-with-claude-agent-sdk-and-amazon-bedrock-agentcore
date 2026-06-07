@@ -1,0 +1,49 @@
+{
+  "$schema": "https://schema.agentcore.aws.dev/v1/agentcore.json",
+  "name": "aafollowup",
+  "version": 1,
+  "managedBy": "CDK",
+  "tags": {
+    "agentcore:created-by": "agentcore-cli",
+    "agentcore:project-name": "aafollowup"
+  },
+  "runtimes": [
+    {
+      "name": "analytics",
+      "build": "Container",
+      "entrypoint": "agent_agentcore.py",
+      "codeLocation": "analytics_agent/",
+      "runtimeVersion": "PYTHON_3_11",
+      "networkMode": "PUBLIC",
+      "protocol": "HTTP",
+      "instrumentation": {
+        "enableOtel": true
+      },
+      "envVars": [
+        {
+          "name": "CLAUDE_CODE_USE_BEDROCK",
+          "value": "1"
+        },
+        {
+          "name": "ANTHROPIC_MODEL",
+          "value": "global.anthropic.claude-opus-4-6-v1"
+        },
+        {
+          "name": "ANTHROPIC_SMALL_FAST_MODEL",
+          "value": "global.anthropic.claude-haiku-4-5-20251001-v1:0"
+        },
+        {
+          "name": "ATHENA_DATABASE",
+          "value": "student_analytics"
+        }
+      ]
+    }
+  ],
+  "memories": [],
+  "credentials": [],
+  "evaluators": [],
+  "onlineEvalConfigs": [],
+  "agentCoreGateways": [],
+  "policyEngines": [],
+  "harnesses": []
+}

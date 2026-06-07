@@ -1,0 +1,124 @@
+{
+  "script_executions": [
+    {
+      "timestamp": "2026-06-06T22:39:10.431892",
+      "script": "simple_calculation.py",
+      "command": "python scripts/simple_calculation.py 10000000 500000",
+      "description": "Calculate runway and burn metrics",
+      "tool_used": "Bash",
+      "success": true
+    },
+    {
+      "timestamp": "2026-06-06T22:39:28.348472",
+      "script": "hiring_impact.py",
+      "command": "python scripts/hiring_impact.py 10 200000",
+      "description": "Calculate hiring impact of 10 engineers at $200K avg salary",
+      "tool_used": "Bash",
+      "success": true
+    },
+    {
+      "timestamp": "2026-06-06T22:39:29.312549",
+      "script": "simple_calculation.py",
+      "command": "python scripts/simple_calculation.py 10000000 500000",
+      "description": "Calculate current runway at $500K/mo burn",
+      "tool_used": "Bash",
+      "success": true
+    },
+    {
+      "timestamp": "2026-06-06T22:39:31.500429",
+      "script": "simple_calculation.py",
+      "command": "python scripts/simple_calculation.py 10000000 716667",
+      "description": "Calculate post-hire runway at new burn rate",
+      "tool_used": "Bash",
+      "success": true
+    },
+    {
+      "timestamp": "2026-06-06T22:39:32.346478",
+      "script": "financial_forecast.py",
+      "command": "python scripts/financial_forecast.py --arr 2400000 --growth 0.15 --months 12 --burn 716667 --format json",
+      "description": "Revenue forecast with new burn rate over 12 months",
+      "tool_used": "Bash",
+      "success": true
+    },
+    {
+      "timestamp": "2026-06-06T22:39:59.764954",
+      "script": "simple_calculation.py",
+      "command": "python scripts/simple_calculation.py 10000000 600000",
+      "description": "Calculate runway with 20% increased burn rate ($600K/mo)",
+      "tool_used": "Bash",
+      "success": true
+    },
+    {
+      "timestamp": "2026-06-06T22:40:09.281960",
+      "script": "simple_calculation.py",
+      "command": "python scripts/simple_calculation.py 10000000 500000",
+      "description": "Run simple_calculation.py with $10M cash and $500K burn",
+      "tool_used": "Bash",
+      "success": true
+    },
+    {
+      "timestamp": "2026-06-06T22:42:23.027732",
+      "script": "simple_calculation.py",
+      "command": "python scripts/simple_calculation.py 10000000 500000",
+      "description": "Calculate current financial state: $10M cash, $500K monthly burn",
+      "tool_used": "Bash",
+      "success": true
+    },
+    {
+      "timestamp": "2026-06-06T22:42:24.044180",
+      "script": "hiring_impact.py",
+      "command": "python scripts/hiring_impact.py 5",
+      "description": "Calculate hiring impact for 5 engineers at default salary",
+      "tool_used": "Bash",
+      "success": true
+    },
+    {
+      "timestamp": "2026-06-06T22:42:26.592128",
+      "script": "simple_calculation.py",
+      "command": "python scripts/simple_calculation.py 10000000 604167",
+      "description": "Calculate new burn with 5 senior engineers added ($604,167/month)",
+      "tool_used": "Bash",
+      "success": true
+    },
+    {
+      "timestamp": "2026-06-06T22:42:27.516714",
+      "script": "simple_calculation.py",
+      "command": "python scripts/simple_calculation.py 9725000 604167",
+      "description": "Calculate adjusted state after one-time hiring costs ($9.725M cash, $604,167/month burn)",
+      "tool_used": "Bash",
+      "success": true
+    },
+    {
+      "timestamp": "2026-06-06T22:43:43.015799",
+      "script": "hiring_impact.py",
+      "command": "python scripts/hiring_impact.py 10 200000",
+      "description": "Model hiring impact for 10 engineers at $200K average",
+      "tool_used": "Bash",
+      "success": true
+    },
+    {
+      "timestamp": "2026-06-06T22:43:43.627030",
+      "script": "simple_calculation.py",
+      "command": "python scripts/simple_calculation.py 10000000 500000",
+      "description": "Calculate baseline runway metrics",
+      "tool_used": "Bash",
+      "success": true
+    },
+    {
+      "timestamp": "2026-06-06T22:44:35.306588",
+      "script": "hiring_impact.py",
+      "command": "python scripts/hiring_impact.py 10 185000",
+      "description": "Calculate hiring impact for 10 engineers at blended average salary",
+      "tool_used": "Bash",
+      "success": true
+    },
+    {
+      "timestamp": "2026-06-06T22:44:58.490484",
+      "script": "simple_calculation.py",
+      "command": "python scripts/simple_calculation.py 10000000 500000",
+      "description": "Calculate current runway metrics",
+      "tool_used": "Bash",
+      "success": true
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+[project]
+# Dependencies for the DEPLOYED agent (installed inside the AgentCore container).
+# Kept minimal: the agent runtime + the AgentCore wrapper + OTel export.
+name = "chief-of-staff-agent"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "claude-agent-sdk==0.2.88",
+    "bedrock-agentcore==1.13.0",
+    "aws-opentelemetry-distro==0.17.1",   # opentelemetry-instrument wrapper used by AgentCore (enableOtel)
+    "openinference-instrumentation-claude-agent-sdk==0.1.5",
+    "python-dotenv==1.2.2",
+    "boto3==1.43.21",
+]
