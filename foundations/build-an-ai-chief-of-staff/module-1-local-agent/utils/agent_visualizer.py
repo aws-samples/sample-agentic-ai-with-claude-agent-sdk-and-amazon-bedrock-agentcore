@@ -371,10 +371,15 @@ def visualize_conversation(messages: list[Any]) -> None:
                 print(f"{indent}   🔧 Tools: {', '.join(pending_tools)}")
             pending_tools = []
 
+    seen_system = False
+
     for msg in messages:
         msg_type = msg.__class__.__name__
 
         if msg_type == "SystemMessage":
+            if seen_system:
+                continue
+            seen_system = True
             session_id = ""
             if hasattr(msg, "data") and "session_id" in msg.data:
                 session_id = f" (Session: {msg.data['session_id'][:8]}...)"

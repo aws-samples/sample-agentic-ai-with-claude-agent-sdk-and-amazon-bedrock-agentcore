@@ -525,10 +525,15 @@ def visualize_conversation_html(messages: list[Any]) -> None:
             )
             pending_tools = []
 
+    seen_system = False
+
     for msg in messages:
         msg_type = msg.__class__.__name__
 
         if msg_type == "SystemMessage":
+            if seen_system:
+                continue
+            seen_system = True
             session_id = ""
             if hasattr(msg, "data") and isinstance(msg.data, dict):
                 if "session_id" in msg.data:
