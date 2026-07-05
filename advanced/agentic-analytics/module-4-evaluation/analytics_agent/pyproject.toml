@@ -1,0 +1,18 @@
+[project]
+# In-container dependencies for the deployed AgentCore runtime. The CLI/CodeBuild
+# builds the image from this + the Dockerfile. Kept separate from the module's
+# top-level pyproject (which is the local dev/test env).
+name = "analytics-agent-runtime"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "claude-agent-sdk==0.2.88",                              # the agent runtime
+    "bedrock-agentcore==1.13.0",                             # BedrockAgentCoreApp + @app.entrypoint
+    "boto3==1.43.21",                                        # Athena + S3
+    "sqlparse==0.5.5",                                       # SELECT-only SQL guard
+    "pandas==2.3.3",                                         # the agent analyzes CSVs
+    "matplotlib==3.10.8",                                    # ...and charts them
+    "python-dotenv==1.2.2",
+    "aws-opentelemetry-distro==0.17.1",                      # ADOT — provides opentelemetry-instrument
+    "openinference-instrumentation-claude-agent-sdk==0.1.5", # emits agent/tool spans into the trace
+]
