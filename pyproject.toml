@@ -5,6 +5,7 @@ description = "Agentic AI Workshop — unified environment (all modules)"
 requires-python = ">=3.11"
 dependencies = [
     "claude-agent-sdk==0.2.88",
+    "mcp==1.29.0",  # mcp 2.0 breaks create_sdk_mcp_server on SDK 0.2.88
     "bedrock-agentcore==1.13.0",
     "boto3==1.43.21",
     "python-dotenv==1.2.2",
