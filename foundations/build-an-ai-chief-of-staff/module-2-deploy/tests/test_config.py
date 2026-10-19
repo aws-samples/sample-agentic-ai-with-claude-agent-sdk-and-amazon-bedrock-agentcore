@@ -35,7 +35,7 @@ def test_dockerfile_is_arm64_and_installs_deps():
 def test_container_deps_pinned():
     """The in-container pyproject pins the SDK + agentcore + otel exactly."""
     txt = (AGENT_DIR / "pyproject.toml").read_text()
-    assert "claude-agent-sdk==0.2.88" in txt
+    assert "claude-agent-sdk==0.2.168" in txt
     assert "bedrock-agentcore==" in txt
     assert "aws-opentelemetry-distro==" in txt
 
