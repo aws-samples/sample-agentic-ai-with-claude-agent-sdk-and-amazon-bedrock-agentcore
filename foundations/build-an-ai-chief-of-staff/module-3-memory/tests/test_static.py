@@ -56,3 +56,10 @@ def test_ab_contrast_is_taught(nb):
     """The honest A/B (memory on vs off on the SAME deployment) must appear."""
     text = "\n".join(c.source for c in nb.cells)
     assert '"memory": false' in text or "'memory': false" in text or "memory=false" in text.lower()
+
+
+# ──────────────────────────────────────────── opt-in clean-up section
+def test_cleanup_is_opt_in(nb):
+    """The clean-up cell must not delete anything on a plain "Run All"."""
+    cells = [c.source for c in nb.cells if c.cell_type == "code" and "RUN_CLEANUP" in c.source]
+    assert len(cells) == 1 and "RUN_CLEANUP = False" in cells[0]

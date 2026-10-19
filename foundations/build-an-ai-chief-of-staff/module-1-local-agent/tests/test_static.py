@@ -168,3 +168,10 @@ def test_financial_analysis_skill_exists():
     assert skill.exists()
     fm = _FRONTMATTER.match(skill.read_text()).group(1)
     assert "financial-analysis" in fm
+
+
+# ──────────────────────────────────────────── opt-in clean-up section
+def test_cleanup_is_opt_in(nb):
+    """The clean-up cell must not delete anything on a plain "Run All"."""
+    cells = [c.source for c in nb.cells if c.cell_type == "code" and "RUN_CLEANUP" in c.source]
+    assert len(cells) == 1 and "RUN_CLEANUP = False" in cells[0]
