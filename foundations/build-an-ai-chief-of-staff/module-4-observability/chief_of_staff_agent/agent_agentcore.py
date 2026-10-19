@@ -20,7 +20,7 @@ import os
 from dotenv import load_dotenv
 
 from bedrock_agentcore import BedrockAgentCoreApp
-from claude_agent_sdk import ClaudeSDKClient
+from claude_agent_sdk import AssistantMessage, ClaudeSDKClient
 from opentelemetry import trace
 from openinference.instrumentation.claude_agent_sdk import ClaudeAgentSDKInstrumentor
 # Reuse the agent's single source of truth.
@@ -58,7 +58,11 @@ async def invoke(payload: dict):
     async with ClaudeSDKClient(options=options) as agent:
         await agent.query(prompt)
         async for msg in agent.receive_response():
-            for block in getattr(msg, "content", []) or []:
+            # Stream only the model's replies. The CLI also emits user-role messages (for example
+            # an expanded SKILL.md or slash-command text), which callers should not see.
+            if not isinstance(msg, AssistantMessage):
+                continue
+            for block in msg.content:
                 text = getattr(block, "text", None)
                 if text:
                     yield text

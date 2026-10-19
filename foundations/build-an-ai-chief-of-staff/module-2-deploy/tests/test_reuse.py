@@ -74,3 +74,36 @@ def test_agent_py_identical_to_module1():
     assert (AGENT_DIR / "agent.py").read_text() == MODULE1_AGENT.read_text(), (
         "module-2 agent.py has drifted from module-1 agent.py — re-sync the bundle"
     )
+
+
+def test_entrypoint_streams_only_assistant_text(monkeypatch):
+    """Only AssistantMessage text is streamed; CLI-injected user-role text (e.g. an expanded
+    SKILL.md) is not."""
+    import asyncio
+
+    import agent_agentcore
+    from claude_agent_sdk import AssistantMessage, TextBlock, UserMessage
+
+    class FakeClient:
+        def __init__(self, options=None):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *exc):
+            return False
+
+        async def query(self, prompt):
+            pass
+
+        async def receive_response(self):
+            yield UserMessage(content=[TextBlock(text="Base directory for this skill: ...")])
+            yield AssistantMessage(content=[TextBlock(text="Runway is 20 months.")], model="test-model")
+
+    monkeypatch.setattr(agent_agentcore, "ClaudeSDKClient", FakeClient)
+
+    async def collect():
+        return [chunk async for chunk in agent_agentcore.invoke({"prompt": "runway?"})]
+
+    assert asyncio.run(collect()) == ["Runway is 20 months."]
