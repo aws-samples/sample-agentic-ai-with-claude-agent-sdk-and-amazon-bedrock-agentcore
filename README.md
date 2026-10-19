@@ -34,7 +34,7 @@ A text-to-SQL agent that queries a Student Analytics dataset on Athena. Requires
 - AWS CLI configured with appropriate credentials
 - Python 3.11
 - [uv](https://docs.astral.sh/uv/) (Python package manager)
-- Node.js 18+ (for the `@aws/agentcore` CLI)
+- Node.js 20+ (for the `@aws/agentcore` CLI)
 
 ## Getting started
 

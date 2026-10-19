@@ -149,6 +149,9 @@ class of span. There are two span sources + one real gate:
 - **Session ids must be ≥33 chars** for `agentcore invoke`.
 - **Other gotcha:** pin `aws-cdk-lib` **exactly** in `agentcore/cdk/package.json` — a floating `^` let it
   resolve to a lib newer than the bundled `aws-cdk` CLI could read (CDK synth "schema version" error).
+  Since AgentCore CLI 0.24.2, `agentcore deploy` rewrites these pins to the versions the CLI release was
+  tested with (`~` ranges, for example `aws-cdk-lib ~2.261.0` on CLI 0.31.1), so commit the CLI-written
+  `package.json` together with `package-lock.json`; the lockfile is what keeps `npm ci` exact.
 ### Module 3 / memory decisions (Phase-0 spike-verified on us-west-2; see `module-3-memory/SPIKE_NOTES.md`)
 Chosen approach = **AgentCore Memory** (over the Runtime persistent filesystem — verified per-session/
 ephemeral, the opposite of the mandate — and over a DIY SessionStore/vector store — re-implements a

@@ -16,7 +16,7 @@ if ! command -v agentcore &>/dev/null; then
   else
     echo "❌ Unsupported package manager. Install Node.js 20 manually." && exit 1
   fi
-  sudo npm install -g @aws/agentcore@0.17.0
+  sudo npm install -g @aws/agentcore@0.31.1
 fi
 (cd agentcore/cdk && npm ci)
 
