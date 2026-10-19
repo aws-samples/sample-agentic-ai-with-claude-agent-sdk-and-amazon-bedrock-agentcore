@@ -1,6 +1,6 @@
 # AgentCore Runtime container for the Chief of Staff agent.
 #
-# Why a container (not CodeZip)? The Claude Agent SDK ships a ~218MB native CLI
+# Why a container (not CodeZip)? The Claude Agent SDK ships a ~270MB native CLI
 # binary (claude_agent_sdk/_bundled/claude). With CodeZip that binary lands
 # WITHOUT the execute bit and the SDK fails at runtime ("Permission denied").
 # Installing the SDK fresh inside a Linux/ARM64 image gives it the right arch
