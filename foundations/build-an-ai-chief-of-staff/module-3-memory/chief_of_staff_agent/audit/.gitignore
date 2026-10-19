@@ -1,0 +1,2 @@
+# The PostToolUse hooks rewrite these logs on every run; they are not source.
+*.json
