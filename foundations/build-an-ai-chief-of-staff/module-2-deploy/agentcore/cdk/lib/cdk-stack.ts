@@ -3,6 +3,7 @@ import {
   AgentCoreMcp,
   type AgentCoreProjectSpec,
   type AgentCoreMcpSpec,
+  type HarnessDeploymentConfig,
 } from '@aws/agentcore-cdk';
 import { CfnOutput, Stack, type StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
@@ -60,7 +61,9 @@ export class AgentCoreStack extends Stack {
     // Create AgentCoreApplication with all agents and harness roles
     this.application = new AgentCoreApplication(this, 'Application', {
       spec,
-      harnesses: harnesses?.length ? harnesses : undefined,
+      // Cast: newer @aws/agentcore-cdk releases (verified with 0.1.0-alpha.54) narrow tools[].type
+      // to a literal union; the local HarnessConfig keeps `string`. Type-only, no runtime change.
+      harnesses: harnesses?.length ? (harnesses as HarnessDeploymentConfig[]) : undefined,
     });
 
     // Create AgentCoreMcp if there are gateways configured
