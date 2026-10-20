@@ -30,7 +30,7 @@ A text-to-SQL agent that queries a Student Analytics dataset on Athena. Requires
 
 ## Prerequisites
 
-- AWS account with Amazon Bedrock model access (Claude Sonnet)
+- AWS account with Amazon Bedrock model access to the Claude models set in each module's `.env.example` (foundations: Claude Sonnet 5.5 and Claude Haiku 5.5; advanced: Claude Opus 4.6 and Claude Haiku 4.5)
 - AWS CLI configured with appropriate credentials
 - Python 3.11
 - [uv](https://docs.astral.sh/uv/) (Python package manager)
