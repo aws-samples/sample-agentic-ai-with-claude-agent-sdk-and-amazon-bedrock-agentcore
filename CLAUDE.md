@@ -107,7 +107,7 @@ AWS credentials + Amazon Bedrock model access (no Athena/S3).
 - **Tooling = the new `@aws/agentcore` npm CLI** (`agentcore create/add/deploy/invoke/remove`,
   config = `agentcore/agentcore.json`, CDK-based). The old `bedrock-agentcore-starter-toolkit` is
   **deprecated** — do not use it.
-- **Build type = Container, NOT CodeZip.** The Claude Agent SDK bundles a ~218MB native CLI
+- **Build type = Container, NOT CodeZip.** The Claude Agent SDK bundles a ~270MB native CLI
   (`claude_agent_sdk/_bundled/claude`). With CodeZip the deploy *succeeds* but `invoke` fails:
   `Permission denied: .../_bundled/claude` (zip strips the execute bit). Container `pip install`s the SDK
   fresh on Linux/arm64 → correct arch + perms. (Proven both ways in the spike.)

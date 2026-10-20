@@ -56,7 +56,7 @@ def build_agent_options(
     No ``model=`` is set — this workshop runs on Amazon Bedrock and the model comes
     from the ``ANTHROPIC_MODEL`` env var (with ``CLAUDE_CODE_USE_BEDROCK=1``).
     """
-    tools = ["Task", "Read", "Write", "Edit", "Bash", "WebSearch"]
+    tools = ["Task", "Read", "Write", "Edit", "Bash"]
     if extra_tools:
         tools = tools + extra_tools
 
@@ -124,7 +124,7 @@ async def send_query(
 
     Features automatically included/leveraged:
         - Memory: CLAUDE.md context loaded from chief_of_staff/CLAUDE.md
-        - Subagents: financial-analyst and recruiter via Task tool (defined in .claude/agents)
+        - Subagents: financial-analyst and recruiter via the Agent tool, formerly Task (defined in .claude/agents)
         - Custom scripts: Python scripts in tools/ via Bash
         - Slash commands: Expanded from .claude/commands/
         - Output styles: Custom output styles defined in .claude/output-styles
