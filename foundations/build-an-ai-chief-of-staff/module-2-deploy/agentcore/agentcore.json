@@ -18,6 +18,7 @@
       "protocol": "HTTP",
       "instrumentation": { "enableOtel": true },
       "envVars": [
+        { "name": "CLAUDE_CODE_DISABLE_BACKGROUND_TASKS", "value": "1" },
         { "name": "CLAUDE_CODE_USE_BEDROCK", "value": "1" },
         { "name": "ANTHROPIC_MODEL", "value": "global.anthropic.claude-opus-4-6-v1" },
         { "name": "ANTHROPIC_SMALL_FAST_MODEL", "value": "global.anthropic.claude-haiku-4-5-20251001-v1:0" }
