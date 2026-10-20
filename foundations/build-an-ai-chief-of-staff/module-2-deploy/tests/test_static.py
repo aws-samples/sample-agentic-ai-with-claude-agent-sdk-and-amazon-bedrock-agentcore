@@ -48,3 +48,10 @@ def test_reuse_is_explained(nb):
 def test_observability_groundwork_mentioned(nb):
     md = "\n".join(c.source for c in nb.cells if c.cell_type == "markdown")
     assert "Module 4" in md and ("CloudWatch" in md or "trace" in md.lower())
+
+
+# ──────────────────────────────────────────── opt-in clean-up section
+def test_cleanup_is_opt_in(nb):
+    """The clean-up cell must not delete anything on a plain "Run All"."""
+    cells = [c.source for c in nb.cells if c.cell_type == "code" and "RUN_CLEANUP" in c.source]
+    assert len(cells) == 1 and "RUN_CLEANUP = False" in cells[0]
